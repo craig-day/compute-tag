@@ -4,15 +4,19 @@ const CONTINUOUS_TAG_PATTERN = /v(\d+)/
 const SEMANTIC_TAG_PATTERN = /v(\d+)\.(\d+)\.(\d+)/
 
 function annotateTag(tag) {
-  const asRc = core.getInput('prerelease') == 'true'
+  const pre = core.getInput('prerelease') == 'true'
 
-  return asRc ? `${tag}-pre` : tag
+  return pre ? `${tag}-pre` : tag
 }
 
 function computeNextTag(tag) {
   const scheme = core.getInput('version_scheme')
   const allTags = core.getInput('all_tags').trim() // Required but can be null if no tags exist
   const needsInitialTag = (!tag || tag == '') && allTags == ''
+
+  if (!needsInitialTag) {
+    tag = tag.split('-', 2)[0] // Handle a tag like v1-beta or v1.0.1-pre by stripping any suffix
+  }
 
   switch (scheme) {
     case 'continuous':
