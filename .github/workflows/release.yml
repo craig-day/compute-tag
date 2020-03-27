@@ -15,7 +15,7 @@ jobs:
         run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 
       - id: previous_tag
-        run: echo "::set-output name=previous_tag::$(git describe --tags)"
+        run: echo "::set-output name=previous_tag::$(git describe --tags HEAD^)"
 
       - id: all_tags
         run: echo "::set-output name=all_tags::$(git tag | tr '\n' ' ')"
