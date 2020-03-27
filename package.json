@@ -1,0 +1,22 @@
+{
+  "name": "compute-tag",
+  "version": "0.0.0",
+  "description": "",
+  "main": "action.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/craig-day/compute-tag.git"
+  },
+  "author": "Craig Day",
+  "license": "SEE LICENSE IN LICENSE",
+  "bugs": {
+    "url": "https://github.com/craig-day/compute-tag/issues"
+  },
+  "homepage": "https://github.com/craig-day/compute-tag#readme",
+  "dependencies": {
+    "@actions/core": "^1.2.3"
+  }
+}

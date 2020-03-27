@@ -1,0 +1,31 @@
+name: Compute Tag
+description: Compute the next tag based on the previous tag and the version scheme
+author: Craig Day
+
+runs:
+  using: node12
+  main: action.js
+
+inputs:
+  previous_tag:
+    description: The previous tag
+    required: true
+  all_tags:
+    description: A space-separated list of all tags
+    required: true
+  version_scheme:
+    description: The versioning scheme to use. Currently only supports `continuous` or `semantic`.
+    required: false
+    default: continuous
+  version_type:
+    description: If using semantic versioning, is this a major, minor, or patch bump?
+    required: false
+    default: patch
+  tag_as_pre:
+    description: Treat this version as prerelease instead of a regular release
+    required: false
+    default: 'false'
+
+outputs:
+  next_tag:
+    description: The computed next tag to be created

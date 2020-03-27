@@ -1,0 +1,37 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: fetch all tags
+        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+      - id: previous_tag
+          run: echo "::set-output name=previous_tag::$(git tag --points-at HEAD^)"
+
+      - id: all_tags
+        run: |
+          echo "::set-output name=all_tags::$(git tag | tr '\n' ' ')"
+
+      - id: compute_tag
+        uses: ./
+        with:
+          previous_tag: ${{ steps.previous_tag.outputs.previous_tag }}
+          all_tags: ${{ steps.all_tags.outputs.all_tags }}
+          version_scheme: continuous
+
+      - name: create release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ steps.compute_tag.outputs.next_tag }}
+          release_name: ${{ steps.compute_tag.outputs.next_tag }}
+          body: >
+            Automatic release of ${{ steps.compute_tag.outputs.next_tag }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
