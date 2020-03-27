@@ -26,6 +26,7 @@ jobs:
           previous_tag: ${{ steps.previous_tag.outputs.previous_tag }}
           all_tags: ${{ steps.all_tags.outputs.all_tags }}
           version_scheme: continuous
+          prerelease: true
 
       - name: create release
         uses: actions/create-release@v1
@@ -34,5 +35,6 @@ jobs:
           release_name: ${{ steps.compute_tag.outputs.next_tag }}
           body: >
             Automatic release of ${{ steps.compute_tag.outputs.next_tag }}
+          prerelease: true
         env:
           GITHUB_TOKEN: ${{ github.token }}

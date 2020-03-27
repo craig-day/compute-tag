@@ -21,7 +21,7 @@ inputs:
     description: If using semantic versioning, is this a major, minor, or patch bump?
     required: false
     default: patch
-  tag_as_pre:
+  prerelease:
     description: Treat this version as prerelease instead of a regular release
     required: false
     default: 'false'

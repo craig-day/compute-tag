@@ -4,7 +4,7 @@ const CONTINUOUS_TAG_PATTERN = /v(\d+)/
 const SEMANTIC_TAG_PATTERN = /v(\d+)\.(\d+)\.(\d+)/
 
 function annotateTag(tag) {
-  const asRc = core.getInput('tag_as_pre') == 'true'
+  const asRc = core.getInput('prerelease') == 'true'
 
   return asRc ? `${tag}-pre` : tag
 }

@@ -9,38 +9,38 @@ This can be helpful to automatically compute tags and pipe them to the
 
 - `previous_tag`: **Required**. The tag that should be incremented.
 
-    This can be set as an output from a step by doing something like this:
+  This can be set as an output from a step by doing something like this:
 
-    ```yaml
-    - id: previous_tag
-      run: echo "::set-output name=previous_tag::$(git tag --points-at HEAD^)"
-    ```
+  ```yaml
+  - id: previous_tag
+    run: echo "::set-output name=previous_tag::$(git tag --points-at HEAD^)"
+  ```
 
-    Then it can be used in this step by referencing `${{ steps.previous_tag.outputs.previous_tag }}`
+  Then it can be used in this step by referencing `${{ steps.previous_tag.outputs.previous_tag }}`
 
 - `all_tags`: **Required**. A space-separated list of all tags. This determines if we should tag the
   initial version.
 
-    Before you can list tags, be sure to fetch them:
+  Before you can list tags, be sure to fetch them:
 
-    ```yaml
-    - name: fetch all tags
-      run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-    ```
+  ```yaml
+  - name: fetch all tags
+    run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+  ```
 
-    Then the tag list can be set as an output from a step by doing something like this:
+  Then the tag list can be set as an output from a step by doing something like this:
 
-    ```yaml
-    - id: all_tags
-      run: echo "::set-output name=all_tags::$(git tag | tr '\n' ' ')"
-    ```
+  ```yaml
+  - id: all_tags
+    run: echo "::set-output name=all_tags::$(git tag | tr '\n' ' ')"
+  ```
 
 - `version_scheme`: **Optional**. One of (`continuous`, `semantic`). _Default_: `continuous`
 
 - `version_type`: **Optional**. This is only read if the `version_scheme` is set to `semantic`.
   One of (`major`, `minor`, `patch`). _Default_: `patch`
 
-- `tag_as_pre`: **Optional**. Tag this release as a prerelease. This appends `-pre` to the computed
+- `prerelease`: **Optional**. Tag this release as a prerelease. This appends `-pre` to the computed
   tag. _Default_: `false`
 
 ## Output
