@@ -11,7 +11,7 @@ function annotateTag(tag) {
 
 function computeNextTag(tag) {
   const scheme = core.getInput('version_scheme')
-  const allTags = core.getInput('all_tags', { required: true }).trim()
+  const allTags = core.getInput('all_tags').trim() // Required but can be null if no tags exist
   const needsInitialTag = (!tag || tag == '') && allTags == ''
 
   switch (scheme) {
@@ -68,7 +68,7 @@ function computeNextTag(tag) {
 }
 
 function run() {
-  const lastTag = core.getInput('previous_tag', { required: true })
+  const lastTag = core.getInput('previous_tag') // Required, but can be null if no tags exist
   const nextTag = computeNextTag(lastTag)
 
   core.info(`Computed the next tag as ${nextTag}`)
