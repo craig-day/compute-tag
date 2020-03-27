@@ -9,6 +9,8 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+
       - name: fetch all tags
         run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 
@@ -17,8 +19,6 @@ jobs:
 
       - id: all_tags
         run: echo "::set-output name=all_tags::$(git tag | tr '\n' ' ')"
-
-      - uses: actions/checkout@v2
 
       - id: compute_tag
         uses: ./

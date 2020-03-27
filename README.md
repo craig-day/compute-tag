@@ -78,6 +78,8 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+
       - name: fetch all tags
         run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 
