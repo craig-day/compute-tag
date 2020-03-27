@@ -32,8 +32,7 @@ This can be helpful to automatically compute tags and pipe them to the
 
     ```yaml
     - id: all_tags
-      run: |
-        echo "::set-output name=all_tags::$(git tag | tr '\n' ' ')"
+      run: echo "::set-output name=all_tags::$(git tag | tr '\n' ' ')"
     ```
 
 - `version_scheme`: **Optional**. One of (`continuous`, `semantic`). _Default_: `continuous`
@@ -83,11 +82,10 @@ jobs:
         run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 
       - id: previous_tag
-          run: echo "::set-output name=previous_tag::$(git tag --points-at HEAD^)"
+        run: echo "::set-output name=previous_tag::$(git tag --points-at HEAD^)"
 
       - id: all_tags
-        run: |
-          echo "::set-output name=all_tags::$(git tag | tr '\n' ' ')"
+        run: echo "::set-output name=all_tags::$(git tag | tr '\n' ' ')"
 
       - id: compute_tag
         uses: craig-day/compute-tag@v1
