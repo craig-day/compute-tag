@@ -13,7 +13,7 @@ This can be helpful to automatically compute tags and pipe them to the
 
   ```yaml
   - id: previous_tag
-    run: echo "::set-output name=previous_tag::$(git tag --points-at HEAD^)"
+    run: echo "::set-output name=previous_tag::$(git describe --tags)"
   ```
 
   Then it can be used in this step by referencing `${{ steps.previous_tag.outputs.previous_tag }}`
@@ -79,12 +79,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
 
       - name: fetch all tags
         run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 
       - id: previous_tag
-        run: echo "::set-output name=previous_tag::$(git tag --points-at HEAD^)"
+        run: echo "::set-output name=previous_tag::$(git describe --tags)"
 
       - id: all_tags
         run: echo "::set-output name=all_tags::$(git tag | tr '\n' ' ')"
