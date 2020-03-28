@@ -66,6 +66,10 @@ steps:
 The following example fetchs tag information using `git` and then computes and creates the next
 release.
 
+**Note:** If you are confident that every commit gets a tag, then you can just set the `fetch-depth`
+to `2` on the checkout step. If every commit doesn't get tagged then you probably want to increase
+the `fetch-depth`.
+
 ```yaml
 name: Release
 
