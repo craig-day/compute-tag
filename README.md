@@ -7,6 +7,9 @@ This can be helpful to automatically compute tags and pipe them to the
 
 ## Inputs
 
+- `repository`: **Required**. The fully qualified repository name, i.e. `owner`/`repo`. Usually
+  `${{ github.repository }}`.
+
 - `github_token`: **Required**. A Github token, usually `${{ github.token }}`.
 
 - `version_scheme`: **Optional**. One of (`continuous`, `semantic`). _Default_: `continuous`
@@ -30,11 +33,10 @@ An example set of step to compute the next tag for a continuously versioned appl
 ```yaml
 steps:
   - id: compute_tag
-    uses: craig-day/compute-tag@v1
+    uses: craig-day/compute-tag@v3
     with:
-      previous_tag: v3
-      all_tags: v1 v2 v3
-      version_scheme: continuous
+      repository: ${{ github.repository }}
+      github_token: ${{ github.token }}
 ```
 
 ## Example
@@ -52,14 +54,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: compute_tag
-        uses: craig-day/compute-tag@v1
+        uses: craig-day/compute-tag@v3
         with:
           repository: ${{ github.repository }}
           github_token: ${{ github.token }}
           version_scheme: continuous
 
       - name: create release
-        uses: actions/create-release@v1
+        uses: actions/create-release@v3
         with:
           tag_name: ${{ steps.compute_tag.outputs.next_tag }}
           release_name: ${{ steps.compute_tag.outputs.next_tag }}

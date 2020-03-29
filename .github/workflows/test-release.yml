@@ -21,7 +21,6 @@ jobs:
         with:
           repository: ${{ github.repository }}
           github_token: ${{ github.token }}
-          version_scheme: continuous
           prerelease: ${{ matrix.pre }}
           prerelease_suffix: ${{ matrix.suffix }}
 
