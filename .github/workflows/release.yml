@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - master
+    paths:
+      - action.yml
+      - action.js
+      - package.json
 
 jobs:
   release:
