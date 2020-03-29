@@ -11,8 +11,8 @@ const [owner, repo] = core
 
 const requestOpts = { owner, repo }
 
-const CONTINUOUS_TAG_PATTERN = /v(\d+)/
-const SEMANTIC_TAG_PATTERN = /v(\d+)\.(\d+)\.(\d+)/
+const CONTINUOUS_TAG_PATTERN = /^(v?)(\d+)/
+const SEMANTIC_TAG_PATTERN = /^(v?)(\d+)\.(\d+)\.(\d+)/
 
 function annotateTag(tag) {
   const pre = core.getInput('prerelease') == 'true'
@@ -55,9 +55,9 @@ async function computeNextTag() {
         return
       }
 
-      const current = parseInt(lastTag.match(CONTINUOUS_TAG_PATTERN)[1])
+      const [_1, vc, current] = lastTag.match(CONTINUOUS_TAG_PATTERN)
 
-      return annotateTag(`v${current + 1}`)
+      return annotateTag(`${vc}${parseInt(current) + 1}`)
     case 'semantic':
       if (needsInitialTag) {
         core.info(
@@ -72,15 +72,15 @@ async function computeNextTag() {
       }
 
       const type = core.getInput('version_type')
-      const [_, major, minor, patch] = lastTag.match(SEMANTIC_TAG_PATTERN)
+      const [_2, vs, major, minor, patch] = lastTag.match(SEMANTIC_TAG_PATTERN)
 
       switch (type) {
         case 'major':
-          return annotateTag(`v${parseInt(major) + 1}.0.0`)
+          return annotateTag(`${vs}${parseInt(major) + 1}.0.0`)
         case 'minor':
-          return annotateTag(`v${major}.${parseInt(minor) + 1}.0`)
+          return annotateTag(`${vs}${major}.${parseInt(minor) + 1}.0`)
         case 'patch':
-          return annotateTag(`v${major}.${minor}.${parseInt(patch) + 1}`)
+          return annotateTag(`${vs}${major}.${minor}.${parseInt(patch) + 1}`)
         default:
           core.setFailed(
             `Invalid semantic version type '${type}'. Must be one of (major, minor, patch)`
