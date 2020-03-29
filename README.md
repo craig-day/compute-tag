@@ -29,7 +29,7 @@ An example set of step to compute the next tag for a continuously versioned appl
 ```yaml
 steps:
   - id: compute_tag
-    uses: craig-day/compute-tag@v3
+    uses: craig-day/compute-tag@v4
     with:
       repository: ${{ github.repository }}
       github_token: ${{ github.token }}
@@ -50,14 +50,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: compute_tag
-        uses: craig-day/compute-tag@v3
+        uses: craig-day/compute-tag@v4
         with:
           repository: ${{ github.repository }}
           github_token: ${{ github.token }}
           version_scheme: continuous
 
       - name: create release
-        uses: actions/create-release@v3
+        uses: actions/create-release@v4
         with:
           tag_name: ${{ steps.compute_tag.outputs.next_tag }}
           release_name: ${{ steps.compute_tag.outputs.next_tag }}
