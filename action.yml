@@ -1,6 +1,9 @@
 name: Compute Tag
 description: Compute the next tag based on the previous tag and the version scheme
 author: Craig Day
+branding:
+  color: purple
+  icon: tag
 
 runs:
   using: node12
