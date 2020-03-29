@@ -1,21 +1,44 @@
 const core = require('@actions/core')
+const github = require('@actions/github')
+
+const octokit = new github.GitHub(
+  core.getInput('github_token', { required: true })
+)
+
+const [owner, repo] = core
+  .getInput('repository', { required: true })
+  .split('/', 2)
+
+const requestOpts = { owner, repo }
 
 const CONTINUOUS_TAG_PATTERN = /v(\d+)/
 const SEMANTIC_TAG_PATTERN = /v(\d+)\.(\d+)\.(\d+)/
 
 function annotateTag(tag) {
   const pre = core.getInput('prerelease') == 'true'
+  const suffix = core.getInput('prerelease_suffix')
 
-  return pre ? `${tag}-pre` : tag
+  return pre ? `${tag}-${suffix}` : tag
 }
 
-function computeNextTag(tag) {
+async function existingTags() {
+  const { data: refs } = await octokit.git.listMatchingRefs({
+    ...requestOpts,
+    ref: 'tags',
+  })
+
+  return refs.reverse()
+}
+
+async function computeNextTag() {
   const scheme = core.getInput('version_scheme')
-  const allTags = core.getInput('all_tags').trim() // Required but can be null if no tags exist
-  const needsInitialTag = (!tag || tag == '') && allTags == ''
+  const recentTags = await existingTags()
+  const needsInitialTag = recentTags.length < 1
+  let lastTag
 
   if (!needsInitialTag) {
-    tag = tag.split('-', 2)[0] // Handle a tag like v1-beta or v1.0.1-pre by stripping any suffix
+    // Grab the most recent tag as teh one we're going to increment
+    lastTag = recentTags.shift().ref.replace('refs/tags/', '')
   }
 
   switch (scheme) {
@@ -27,12 +50,12 @@ function computeNextTag(tag) {
         return annotateTag('v1')
       }
 
-      if (!CONTINUOUS_TAG_PATTERN.test(tag)) {
-        core.setFailed(`Unable to parse continuous version tag '${tag}'`)
+      if (!CONTINUOUS_TAG_PATTERN.test(lastTag)) {
+        core.setFailed(`Unable to parse continuous version tag '${lastTag}'`)
         return
       }
 
-      const current = parseInt(tag.match(CONTINUOUS_TAG_PATTERN)[1])
+      const current = parseInt(lastTag.match(CONTINUOUS_TAG_PATTERN)[1])
 
       return annotateTag(`v${current + 1}`)
     case 'semantic':
@@ -43,13 +66,13 @@ function computeNextTag(tag) {
         return annotateTag('v1.0.0')
       }
 
-      if (!SEMANTIC_TAG_PATTERN.test(tag)) {
-        core.setFailed(`Unable to parse semantic version tag '${tag}`)
+      if (!SEMANTIC_TAG_PATTERN.test(lastTag)) {
+        core.setFailed(`Unable to parse semantic version tag '${lastTag}`)
         return
       }
 
       const type = core.getInput('version_type')
-      const [_, major, minor, patch] = tag.match(SEMANTIC_TAG_PATTERN)
+      const [_, major, minor, patch] = lastTag.match(SEMANTIC_TAG_PATTERN)
 
       switch (type) {
         case 'major':
@@ -71,9 +94,8 @@ function computeNextTag(tag) {
   }
 }
 
-function run() {
-  const lastTag = core.getInput('previous_tag') // Required, but can be null if no tags exist
-  const nextTag = computeNextTag(lastTag)
+async function run() {
+  const nextTag = await computeNextTag()
 
   core.info(`Computed the next tag as ${nextTag}`)
   core.setOutput('next_tag', nextTag)

@@ -7,11 +7,11 @@ runs:
   main: action.js
 
 inputs:
-  previous_tag:
-    description: The previous tag
+  repository:
+    description: The fully qualified repository, i.e. owner/repo. Usually from `{{ github.repository }}`.
     required: true
-  all_tags:
-    description: A space-separated list of all tags
+  github_token:
+    description: A Github token for the repo, usually `{{ github.token }}`.
     required: true
   version_scheme:
     description: The versioning scheme to use. Currently only supports `continuous` or `semantic`.
@@ -22,9 +22,13 @@ inputs:
     required: false
     default: patch
   prerelease:
-    description: Treat this version as prerelease instead of a regular release
+    description: Treat this version as prerelease instead of a regular release.
     required: false
     default: 'false'
+  prerelease_suffix:
+    description: What to annotate a prerelease version tag with.
+    required: false
+    default: 'pre'
 
 outputs:
   next_tag:

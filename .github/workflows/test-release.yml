@@ -1,0 +1,31 @@
+name: Test
+
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        pre:
+          - true
+          - false
+        suffix:
+          - pre
+          - alpha
+    steps:
+      - uses: actions/checkout@v2
+
+      - id: compute_tag
+        uses: ./
+        with:
+          repository: ${{ github.repository }}
+          github_token: ${{ github.token }}
+          version_scheme: continuous
+          prerelease: ${{ matrix.pre }}
+          prerelease_suffix: ${{ matrix.suffix }}
+
+      - name: print out computed tag
+        run: echo "The next computed tag is $TAG"
+        env:
+          TAG: ${{ steps.compute_tag.outputs.next_tag }}
