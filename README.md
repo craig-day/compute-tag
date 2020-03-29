@@ -1,5 +1,7 @@
 # compute-tag
 
+![Validate Action](https://github.com/craig-day/compute-tag/workflows/Validate%20Action/badge.svg?event=push)
+
 A Github action to compute the next version tag.
 
 This can be helpful to automatically compute tags and pipe them to the
