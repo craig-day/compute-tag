@@ -7,20 +7,14 @@ This can be helpful to automatically compute tags and pipe them to the
 
 ## Inputs
 
-- `repository`: **Required**. The fully qualified repository name, i.e. `owner`/`repo`. Usually
-  `${{ github.repository }}`.
-
-- `github_token`: **Required**. A Github token, usually `${{ github.token }}`.
-
-- `version_scheme`: **Optional**. One of (`continuous`, `semantic`). _Default_: `continuous`
-
-- `version_type`: **Optional**. This is only read if the `version_scheme` is set to `semantic`.
-  One of (`major`, `minor`, `patch`). _Default_: `patch`
-
-- `prerelease`: **Optional**. Tag this release as a prerelease. This appends a suffix to the
-  computed tag. _Default_: `false`
-
-- `prerelease_suffix`: **Optional**. The suffix added to a prerelease tag. _Default_: `pre`
+| Parameter           | Description                                                                  | Required | Default      |
+| ------------------- | ---------------------------------------------------------------------------- | -------- | ------------ |
+| `repository`        | Full name, `owner`/`repo`. Usually `${{ github.repository }}`                | Y        | N/A          |
+| `github_token`      | A Github token, usually `${{ github.token }}`                                | Y        | N/A          |
+| `version_scheme`    | One of (`continuous`, `semantic`)                                            | N        | `continuous` |
+| `version_type`      | One of (`major`, `minor`, `patch`), if `version_scheme` is set to `semantic` | N        | `patch`      |
+| `prerelease`        | Tag this release as a prerelease. This appends a suffix to the computed tag  | N        | `false`      |
+| `prerelease_suffix` | The suffix added to a prerelease tag                                         | N        | `pre`        |
 
 ## Output
 
