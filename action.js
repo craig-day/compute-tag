@@ -54,17 +54,16 @@ function semanticVersion(tag) {
   try {
     const [version, pre] = tag.split('-', 2)
     const sem = semver.parse(semver.coerce(version))
-    let prerelease
 
     if (!pre && includeBuild()) {
-      prerelease = [suffix, 0]
+      sem.prerelease = [suffix, 0]
     } else if (!pre) {
-      prerelease = [suffix]
+      sem.prerelease = [suffix]
     } else {
-      prerelease = semver.prerelease(`0.0.0-${pre}`)
+      sem.prerelease = semver.prerelease(`0.0.0-${pre}`)
     }
 
-    return { ...sem, prerelease }
+    return sem
   } catch (_) {
     // semver will return null if it fails to parse, maintain this behavior in our API
     return null
@@ -87,20 +86,24 @@ function computeNextContinuous(semTag) {
 }
 
 function computeNextSemantic(semTag) {
-  const type = core.getInput('version_type', { required: true })
+  try {
+    const type = core.getInput('version_type', { required: true })
 
-  switch (type) {
-    case Semantic.Major:
-    case Semantic.Minor:
-    case Semantic.Patch:
-    case Semantic.Prerelease:
-      return `${semTag.options.tagPrefix}${semver.inc(semTag, type)}`
-    default:
-      core.setFailed(
-        `Unsupported semantic version type ${type}. Must be one of (${Object.values(
-          Semantic
-        ).join(', ')})`
-      )
+    switch (type) {
+      case Semantic.Major:
+      case Semantic.Minor:
+      case Semantic.Patch:
+      case Semantic.Prerelease:
+        return `${semTag.options.tagPrefix}${semver.inc(semTag, type)}`
+      default:
+        core.setFailed(
+          `Unsupported semantic version type ${type}. Must be one of (${Object.values(
+            Semantic
+          ).join(', ')})`
+        )
+    }
+  } catch (error) {
+    core.setFailed(`Failed to compute next semantic tag: ${error}`)
   }
 }
 
