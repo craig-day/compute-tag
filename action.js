@@ -81,7 +81,7 @@ function computeNextContinuous(semTag) {
 
 function computeNextSemantic(semTag) {
   try {
-    const type = core.getInput('version_type')
+    const type = core.getInput('version_type') || 'prerelease'
 
     switch (type) {
       case Semantic.Major:
