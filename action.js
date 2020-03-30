@@ -22,10 +22,6 @@ const Semantic = {
   Prerelease: 'prerelease',
 }
 
-function isPrerelease() {
-  return core.getInput('version_type') == Semantic.Prerelease
-}
-
 function isNullString(string) {
   return (
     !string || string.length == 0 || string == 'null' || string == 'undefined'
@@ -33,8 +29,9 @@ function isNullString(string) {
 }
 
 function initialTag(tag) {
+  const isPrerelease = core.getInput('version_type') == Semantic.Prerelease
   const suffix = core.getInput('prerelease_suffix')
-  const newTag = isPrerelease() ? `${tag}-${suffix}` : tag
+  const newTag = isPrerelease ? `${tag}-${suffix}` : tag
 
   return `${newTag}.0`
 }
@@ -67,14 +64,14 @@ function semanticVersion(tag) {
 }
 
 function determineContinuousBumpType(semTag) {
+  const type = core.getInput('version_type') || 'prerelease'
   const hasExistingPrerelease = semTag.prerelease.length > 0
 
-  if (hasExistingPrerelease) {
-    return Semantic.Prerelease
-  } else if (isPrerelease()) {
-    return 'premajor'
-  } else {
-    return Semantic.Major
+  switch (type) {
+    case Semantic.Prerelease:
+      return hasExistingPrerelease ? Semantic.Prerelease : 'premajor'
+    default:
+      return Semantic.Major
   }
 }
 
