@@ -1,9 +1,9 @@
-name: Validate Action
+name: Example Runs
 
 on: push
 
 jobs:
-  test:
+  example:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -12,6 +12,9 @@ jobs:
           - semantic
         type:
           - null
+          - major
+          - minor
+          - patch
           - prerelease
     steps:
       - uses: actions/checkout@v2
@@ -21,7 +24,7 @@ jobs:
         with:
           github_token: ${{ github.token }}
           version_scheme: ${{ matrix.scheme }}
-          version_type: ${{ matrix.type || (matrix.scheme == 'semantic' && 'major') }}
+          version_type: ${{ matrix.type }}
 
       - name: print out computed tag
         run: echo "The next computed tag is $TAG"
