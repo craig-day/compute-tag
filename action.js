@@ -71,36 +71,14 @@ function semanticVersion(tag) {
 }
 
 function computeNextContinuous(semTag) {
-  const [name, build] = semTag.prerelease
-  const hasBuildNumber = typeof build === 'number'
-  const previousIsPrerelease = !isNullString(name)
+  const bumpType = isPrerelease() ? Semantic.Prerelease : Semantic.Major
+  const nextSemTag = semver.parse(semver.inc(semTag, bumpType))
+  const tagSuffix =
+    nextSemTag.prerelease.length > 0
+      ? `-${nextSemTag.prerelease.join('.')}`
+      : ''
 
-  core.info(`Last Tag: ${JSON.stringify(semTag)}`)
-  core.info(`Is prerelease?: ${JSON.stringify(isPrerelease())}`)
-  core.info(
-    `semver.inc: ${
-      isPrerelease()
-        ? semver.inc(semTag, 'prerelease')
-        : semver.inc(semTag, 'major')
-    }`
-  )
-
-  if (isPrerelease()) {
-    if (hasBuildNumber) {
-      // The version number already has a build number, just increment that
-      return `${semTag.options.tagPrefix}${semTag.major}-${name}.${build + 1}`
-    } else {
-      // The version doesn't have a build number. Maybe it was a real tag like `v10`. Increment
-      // major and then set build 0
-      return `${semTag.options.tagPrefix}${semTag.major + 1}-${name}.0`
-    }
-  } else {
-    if (previousIsPrerelease) {
-      return `${semTag.options.tagPrefix}${semTag.major}`
-    } else {
-      return `${semTag.options.tagPrefix}${semTag.major + 1}`
-    }
-  }
+  return [semTag.options.tagPrefix, nextSemTag.major, tagSuffix].join('')
 }
 
 function computeNextSemantic(semTag) {
