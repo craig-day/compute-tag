@@ -66,8 +66,20 @@ function semanticVersion(tag) {
   }
 }
 
+function determineContinuousBumpType(semTag) {
+  const hasExistingPrerelease = semTag.prerelease.length > 0
+
+  if (hasExistingPrerelease) {
+    return Semantic.Prerelease
+  } else if (isPrerelease()) {
+    return 'premajor'
+  } else {
+    return Semantic.Major
+  }
+}
+
 function computeNextContinuous(semTag) {
-  const bumpType = isPrerelease() ? Semantic.Prerelease : Semantic.Major
+  const bumpType = determineContinuousBumpType(semTag)
   const nextSemTag = semver.parse(semver.inc(semTag, bumpType))
   const tagSuffix =
     nextSemTag.prerelease.length > 0
