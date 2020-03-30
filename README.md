@@ -11,10 +11,10 @@ This can be helpful to automatically compute tags and pipe them to the
 
 | Parameter           | Description                                                                                      | Required | Default      |
 | ------------------- | ------------------------------------------------------------------------------------------------ | -------- | ------------ |
-| `github_token`      | A Github token, usually `${{ github.token }}`                                                    | **Y**    | N/A          |
-| `version_scheme`    | One of (`continuous`, `semantic`)                                                                | N        | `semantic`   |
+| `github_token`      | A Github token, usually `${{ github.token }}`.                                                   | **Y**    | N/A          |
+| `version_scheme`    | One of (`continuous`, `semantic`).                                                               | N        | `semantic`   |
 | `version_type`      | One of (`major`, `minor`, `patch`, `prerelease`). For continuous, only `prerelease` has meaning. | N        | `prerelease` |
-| `prerelease_suffix` | The suffix added to a prerelease tag                                                             | N        | `pre`        |
+| `prerelease_suffix` | The suffix added to a prerelease tag, if none already exists.                                    | N        | `beta`       |
 
 ## Output
 
@@ -25,12 +25,14 @@ This can be helpful to automatically compute tags and pipe them to the
 ```yaml
 steps:
   - id: compute_tag
-    uses: craig-day/compute-tag@v4
+    uses: craig-day/compute-tag@v5
     with:
       github_token: ${{ github.token }}
 ```
 
-## Example
+## Examples
+
+**Tag each push to master as a `semantic` `prerelease`**
 
 ```yaml
 name: Release
@@ -45,7 +47,68 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: compute_tag
-        uses: craig-day/compute-tag@v4
+        uses: craig-day/compute-tag@v5
+        with:
+          github_token: ${{ github.token }}
+
+      - name: create release
+        uses: actions/create-release@v4
+        with:
+          tag_name: ${{ steps.compute_tag.outputs.next_tag }}
+          release_name: ${{ steps.compute_tag.outputs.next_tag }}
+          body: >
+            Automatic release of ${{ steps.compute_tag.outputs.next_tag }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+```
+
+**Tag each push to master as a `semantic` `patch`**
+
+```yaml
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - id: compute_tag
+        uses: craig-day/compute-tag@v5
+        with:
+          github_token: ${{ github.token }}
+          version_type: patch
+
+      - name: create release
+        uses: actions/create-release@v4
+        with:
+          tag_name: ${{ steps.compute_tag.outputs.next_tag }}
+          release_name: ${{ steps.compute_tag.outputs.next_tag }}
+          body: >
+            Automatic release of ${{ steps.compute_tag.outputs.next_tag }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+```
+
+**Tag each push to master as a `continuous` `prerelease`**
+
+```yaml
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - id: compute_tag
+        uses: craig-day/compute-tag@v5
         with:
           github_token: ${{ github.token }}
           version_scheme: continuous
