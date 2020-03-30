@@ -55,9 +55,7 @@ function semanticVersion(tag) {
     const [version, pre] = tag.split('-', 2)
     const sem = semver.parse(semver.coerce(version))
 
-    if (isNullString(pre)) {
-      sem.prerelease = [suffix, 0]
-    } else {
+    if (!isNullString(pre)) {
       sem.prerelease = semver.prerelease(`0.0.0-${pre}`)
     }
 
