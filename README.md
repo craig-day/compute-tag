@@ -9,14 +9,13 @@ This can be helpful to automatically compute tags and pipe them to the
 
 ## Inputs
 
-| Parameter              | Description                                                                                      | Required | Default      |
-| ---------------------- | ------------------------------------------------------------------------------------------------ | -------- | ------------ |
-| `repository`           | Full name, `owner`/`repo`. Usually `${{ github.repository }}`                                    | **Y**    | N/A          |
-| `github_token`         | A Github token, usually `${{ github.token }}`                                                    | **Y**    | N/A          |
-| `version_scheme`       | One of (`continuous`, `semantic`)                                                                | N        | `semantic`   |
-| `version_type`         | One of (`major`, `minor`, `patch`, `prerelease`). For continuous, only `prerelease` has meaning. | N        | `prerelease` |
-| `prerelease_suffix`    | The suffix added to a prerelease tag                                                             | N        | `pre`        |
-| `include_build_number` | If continuous versioning, whether to append the build number to the end of prerelease tags.      | N        | `false`      |
+| Parameter           | Description                                                                                      | Required | Default      |
+| ------------------- | ------------------------------------------------------------------------------------------------ | -------- | ------------ |
+| `repository`        | Full name, `owner`/`repo`. Usually `${{ github.repository }}`                                    | **Y**    | N/A          |
+| `github_token`      | A Github token, usually `${{ github.token }}`                                                    | **Y**    | N/A          |
+| `version_scheme`    | One of (`continuous`, `semantic`)                                                                | N        | `semantic`   |
+| `version_type`      | One of (`major`, `minor`, `patch`, `prerelease`). For continuous, only `prerelease` has meaning. | N        | `prerelease` |
+| `prerelease_suffix` | The suffix added to a prerelease tag                                                             | N        | `pre`        |
 
 ## Output
 

@@ -71,10 +71,22 @@ function semanticVersion(tag) {
 }
 
 function computeNextContinuous(semTag) {
-  if (isPrerelease()) {
-    let [name, build] = semTag.prerelease
+  const [name, build] = semTag.prerelease
+  const hasBuildNumber = typeof build === 'number'
+  const previousIsPrerelease = !isNullString(name)
 
-    if (build) {
+  core.info(`Last Tag: ${JSON.stringify(semTag)}`)
+  core.info(`Is prerelease?: ${JSON.stringify(isPrerelease())}`)
+  core.info(
+    `semver.inc: ${
+      isPrerelease()
+        ? semver.inc(semTag, 'prerelease')
+        : semver.inc(semTag, 'major')
+    }`
+  )
+
+  if (isPrerelease()) {
+    if (hasBuildNumber) {
       // The version number already has a build number, just increment that
       return `${semTag.options.tagPrefix}${semTag.major}-${name}.${build + 1}`
     } else {
@@ -83,7 +95,11 @@ function computeNextContinuous(semTag) {
       return `${semTag.options.tagPrefix}${semTag.major + 1}-${name}.0`
     }
   } else {
-    return `${semTag.options.tagPrefix}${semTag.major + 1}`
+    if (previousIsPrerelease) {
+      return `${semTag.options.tagPrefix}${semTag.major}`
+    } else {
+      return `${semTag.options.tagPrefix}${semTag.major + 1}`
+    }
   }
 }
 
@@ -131,7 +147,7 @@ async function computeNextTag() {
   const semTag = semanticVersion(lastTag)
 
   core.info(`Computing the next tag based on: ${lastTag}`)
-  core.info(`Tag parsed as semantic version: ${JSON.stringify(sem)}`)
+  core.info(`Tag parsed as semantic version: ${JSON.stringify(semTag)}`)
 
   if (semTag == null) {
     core.setFailed(`Failed to parse tag: ${lastTag}`)
