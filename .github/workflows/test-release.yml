@@ -28,7 +28,7 @@ jobs:
           repository: ${{ github.repository }}
           github_token: ${{ github.token }}
           version_scheme: ${{ matrix.scheme }}
-          version_type: ${{ matrix.type }}
+          version_type: ${{ matrix.type || (matrix.scheme == 'semantic' && 'major') }}
           prerelease_suffix: ${{ matrix.suffix }}
           include_build_number: ${{ matrix.build }}
 
