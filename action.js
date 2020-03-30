@@ -24,19 +24,21 @@ const Semantic = {
   Prerelease: 'prerelease',
 }
 
-function includeBuild() {
-  return core.getInput('include_build_number') == 'true'
-}
-
 function isPrerelease() {
   return core.getInput('version_type') == Semantic.Prerelease
+}
+
+function isNullString(string) {
+  return (
+    !string || string.length == 0 || string == 'null' || string == 'undefined'
+  )
 }
 
 function initialTag(tag) {
   const suffix = core.getInput('prerelease_suffix')
   const newTag = isPrerelease() ? `${tag}-${suffix}` : tag
 
-  return includeBuild() ? `${newTag}.0` : newTag
+  return `${newTag}.0`
 }
 
 async function existingTags() {
@@ -55,10 +57,8 @@ function semanticVersion(tag) {
     const [version, pre] = tag.split('-', 2)
     const sem = semver.parse(semver.coerce(version))
 
-    if (!pre && includeBuild()) {
+    if (isNullString(pre)) {
       sem.prerelease = [suffix, 0]
-    } else if (!pre) {
-      sem.prerelease = [suffix]
     } else {
       sem.prerelease = semver.prerelease(`0.0.0-${pre}`)
     }
@@ -71,15 +71,17 @@ function semanticVersion(tag) {
 }
 
 function computeNextContinuous(semTag) {
-  if (isPrerelease() && includeBuild()) {
+  if (isPrerelease()) {
     let [name, build] = semTag.prerelease
-    build = build || 0
 
-    return `${semTag.options.tagPrefix}${semTag.major}-${name}.${build + 1}`
-  } else if (isPrerelease()) {
-    const [name] = semTag.prerelease
-
-    return `${semTag.options.tagPrefix}${semTag.major + 1}-${name}`
+    if (build) {
+      // The version number already has a build number, just increment that
+      return `${semTag.options.tagPrefix}${semTag.major}-${name}.${build + 1}`
+    } else {
+      // The version doesn't have a build number. Maybe it was a real tag like `v10`. Increment
+      // major and then set build 0
+      return `${semTag.options.tagPrefix}${semTag.major + 1}-${name}.0`
+    }
   } else {
     return `${semTag.options.tagPrefix}${semTag.major + 1}`
   }
@@ -127,6 +129,9 @@ async function computeNextTag() {
 
   const lastTag = recentTags.shift().ref.replace('refs/tags/', '')
   const semTag = semanticVersion(lastTag)
+
+  core.info(`Computing the next tag based on: ${lastTag}`)
+  core.info(`Tag parsed as semantic version: ${JSON.stringify(sem)}`)
 
   if (semTag == null) {
     core.setFailed(`Failed to parse tag: ${lastTag}`)

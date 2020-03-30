@@ -14,11 +14,8 @@ jobs:
           - null
           - prerelease
         suffix:
+          - null
           - pre
-          - alpha
-        build:
-          - true
-          - false
     steps:
       - uses: actions/checkout@v2
 
@@ -30,7 +27,6 @@ jobs:
           version_scheme: ${{ matrix.scheme }}
           version_type: ${{ matrix.type || (matrix.scheme == 'semantic' && 'major') }}
           prerelease_suffix: ${{ matrix.suffix }}
-          include_build_number: ${{ matrix.build }}
 
       - name: print out computed tag
         run: echo "The next computed tag is $TAG"
