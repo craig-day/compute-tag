@@ -63,6 +63,8 @@ Computing the next tag based on: v5.0.0-pre.4
 Computed the next tag as: v5.0.0-pre.5
 ```
 
+---
+
 **Tag each push to master as a `semantic` `patch`**
 
 ```yaml
@@ -90,6 +92,8 @@ _Sample Logs_:
 Computing the next tag based on: v5.0.3
 Computed the next tag as: v5.0.4
 ```
+
+---
 
 **Tag each push to master as a `continuous` `prerelease`**
 
@@ -120,6 +124,8 @@ Computing the next tag based on: v5-pre.4
 Computed the next tag as: v5-pre.5
 ```
 
+---
+
 **Switching from `continuous` to `semantic`**
 
 ```yaml
@@ -147,6 +153,8 @@ _Sample Logs_:
 Computing the next tag based on: v5-pre.4
 Computed the next tag as: v5.0.0-pre.5
 ```
+
+---
 
 **Create a GitHub Release for each push to `master`**
 
