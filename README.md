@@ -1,6 +1,7 @@
 # compute-tag
 
-![Validate Action](https://github.com/craig-day/compute-tag/workflows/Validate%20Action/badge.svg?event=push)
+![Latest Release](https://img.shields.io/github/v/release/craig-day/compute-tag?label=Latest%20Release)
+![Example Runs](https://github.com/craig-day/compute-tag/workflows/Example%20Runs/badge.svg)
 
 A Github action to compute the next version tag.
 
@@ -32,6 +33,9 @@ steps:
 
 ## Examples
 
+For an exhuastive list of every `version_scheme`+`version_type` combination, see the
+[results from the **Example Runs** workflow](https://github.com/craig-day/compute-tag/actions?query=workflow%3A%22Example+Runs%22)
+
 **Tag each push to master as a `semantic` `prerelease`**
 
 ```yaml
@@ -60,6 +64,13 @@ jobs:
             Automatic release of ${{ steps.compute_tag.outputs.next_tag }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
+```
+
+_Sample Logs_:
+
+```
+Computing the next tag based on: v5.0.0-pre.4
+Computed the next tag as: v5.0.0-pre.5
 ```
 
 **Tag each push to master as a `semantic` `patch`**
@@ -93,6 +104,13 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
 ```
 
+_Sample Logs_:
+
+```
+Computing the next tag based on: v5.0.3
+Computed the next tag as: v5.0.4
+```
+
 **Tag each push to master as a `continuous` `prerelease`**
 
 ```yaml
@@ -123,4 +141,39 @@ jobs:
             Automatic release of ${{ steps.compute_tag.outputs.next_tag }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
+```
+
+_Sample Logs_:
+
+```
+Computing the next tag based on: v5-pre.4
+Computed the next tag as: v5-pre.5
+```
+
+**Switching from `continuous` to `semantic`**
+
+```yaml
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - id: compute_tag
+        uses: craig-day/compute-tag@v5
+        with:
+          github_token: ${{ github.token }}
+          version_scheme: semantic
+```
+
+_Sample Logs_:
+
+```
+Computing the next tag based on: v5-pre.4
+Computed the next tag as: v5.0.0-pre.5
 ```
