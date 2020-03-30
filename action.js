@@ -1,5 +1,6 @@
 const core = require('@actions/core')
 const github = require('@actions/github')
+const semver = require('semver')
 
 const octokit = new github.GitHub(
   core.getInput('github_token', { required: true })
@@ -11,10 +12,19 @@ const [owner, repo] = core
 
 const requestOpts = { owner, repo }
 
-const CONTINUOUS_TAG_PATTERN = /^(v?)(\d+)/
-const SEMANTIC_TAG_PATTERN = /^(v?)(\d+)\.(\d+)\.(\d+)/
+const Scheme = {
+  Continuous: 'continuous',
+  Semantic: 'semantic',
+}
 
-function annotateTag(tag) {
+const Semantic = {
+  Major: 'major',
+  Minor: 'minor',
+  Patch: 'patch',
+  Prerelease: 'prerelease',
+}
+
+function initialTag(tag) {
   const pre = core.getInput('prerelease') == 'true'
   const suffix = core.getInput('prerelease_suffix')
 
@@ -30,66 +40,93 @@ async function existingTags() {
   return refs.reverse()
 }
 
+function semanticVersion(tag) {
+  try {
+    const [version, pre] = tag.split('-', 2)
+    const sem = semver.parse(semver.coerce(version))
+    const prerelease = semver.prerelease(`0.0.0-${pre}`)
+
+    return { ...sem, prerelease }
+  } catch (_) {
+    // semver will return null if it fails to parse, maintain this behavior in our API
+    return null
+  }
+}
+
+function computeNextContinuous(semTag) {
+  const isPrerelease = core.getInput('prerelease') == 'true'
+  const includeBuild = core.getInput('include_build_number') == 'true'
+
+  if (isPrerelease && includeBuild) {
+    const [name, build] = semTag.prerelease
+    build = build || 0
+
+    return `${semTag.options.tagPrefix}${semTag.major}-${name}.${build + 1}`
+  } else if (isPrerelease) {
+    const [name] = semTag.prerelease
+
+    return `${semTag.options.tagPrefix}${semTag.major + 1}-${name}`
+  } else {
+    return `${semTag.options.tagPrefix}${semTag.major + 1}`
+  }
+}
+
+function computeNextSemantic(semTag) {
+  const type = core.getInput('version_type', { required: true })
+
+  switch (type) {
+    case Semantic.Major:
+    case Semantic.Minor:
+    case Semantic.Patch:
+    case Semantic.Prerelease:
+      return `${semTag.options.tagPrefix}${semver.inc(semTag, type)}`
+    default:
+      core.setFailed(
+        `Unsupported semantic version type ${type}. Must be one of (${Object.values(
+          Semantic
+        ).join(', ')})`
+      )
+  }
+}
+
 async function computeNextTag() {
   const scheme = core.getInput('version_scheme')
-  const recentTags = await existingTags()
-  const needsInitialTag = recentTags.length < 1
-  let lastTag
 
-  if (!needsInitialTag) {
-    // Grab the most recent tag as teh one we're going to increment
-    lastTag = recentTags.shift().ref.replace('refs/tags/', '')
+  const recentTags = await existingTags()
+
+  // Handle zero-state where no tags exist for the repo
+  if (recentTags.length < 1) {
+    switch (scheme) {
+      case Scheme.Continuous:
+        return initialTag('v1')
+      case Scheme.Semantic:
+        return initialTag('v1.0.0')
+      default:
+        core.setFailed(`Unsupported version scheme: ${scheme}`)
+        return
+    }
+  }
+
+  const lastTag = recentTags.shift().ref.replace('refs/tags/', '')
+  const semTag = semanticVersion(lastTag)
+
+  if (semTag == null) {
+    core.setFailed(`Failed to parse tag: ${lastTag}`)
+    return
+  } else {
+    semTag.options.tagPrefix = lastTag.startsWith('v') ? 'v' : ''
   }
 
   switch (scheme) {
     case 'continuous':
-      if (needsInitialTag) {
-        core.info(
-          'No previous tag or existing tags found, creating initial tag v1'
-        )
-        return annotateTag('v1')
-      }
-
-      if (!CONTINUOUS_TAG_PATTERN.test(lastTag)) {
-        core.setFailed(`Unable to parse continuous version tag '${lastTag}'`)
-        return
-      }
-
-      const [_1, vc, current] = lastTag.match(CONTINUOUS_TAG_PATTERN)
-
-      return annotateTag(`${vc}${parseInt(current) + 1}`)
+      return computeNextContinuous(semTag)
     case 'semantic':
-      if (needsInitialTag) {
-        core.info(
-          'No previous tag or existing tags found, creating initial tag v1.0.0'
-        )
-        return annotateTag('v1.0.0')
-      }
-
-      if (!SEMANTIC_TAG_PATTERN.test(lastTag)) {
-        core.setFailed(`Unable to parse semantic version tag '${lastTag}`)
-        return
-      }
-
-      const type = core.getInput('version_type')
-      const [_2, vs, major, minor, patch] = lastTag.match(SEMANTIC_TAG_PATTERN)
-
-      switch (type) {
-        case 'major':
-          return annotateTag(`${vs}${parseInt(major) + 1}.0.0`)
-        case 'minor':
-          return annotateTag(`${vs}${major}.${parseInt(minor) + 1}.0`)
-        case 'patch':
-          return annotateTag(`${vs}${major}.${minor}.${parseInt(patch) + 1}`)
-        default:
-          core.setFailed(
-            `Invalid semantic version type '${type}'. Must be one of (major, minor, patch)`
-          )
-          return
-      }
+      return computeNextSemantic(semTag)
     default:
       core.setFailed(
-        `Invalid version_scheme: '${scheme}'. Must be one of (continuous, semantic)`
+        `Invalid version_scheme: '${scheme}'. Must be one of (${Object.values(
+          Scheme
+        ).join(', ')})`
       )
   }
 }

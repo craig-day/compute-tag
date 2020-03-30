@@ -32,6 +32,10 @@ inputs:
     description: What to annotate a prerelease version tag with.
     required: false
     default: 'pre'
+  include_build_number:
+    description: If continuous versioning, whether to append the build number to the end of prerelease tags.
+    required: false
+    default: 'false'
 
 outputs:
   next_tag:
