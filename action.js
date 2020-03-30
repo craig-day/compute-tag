@@ -78,9 +78,21 @@ function determineContinuousBumpType(semTag) {
   }
 }
 
+function determinePrereleaseName(semTag) {
+  const hasExistingPrerelease = semTag.prerelease.length > 0
+
+  if (hasExistingPrerelease) {
+    const [name, _] = semTag.prerelease
+    return name
+  } else {
+    return core.getInput('prerelease_suffix') || 'beta'
+  }
+}
+
 function computeNextContinuous(semTag) {
   const bumpType = determineContinuousBumpType(semTag)
-  const nextSemTag = semver.parse(semver.inc(semTag, bumpType))
+  const preName = determinePrereleaseName(semTag)
+  const nextSemTag = semver.parse(semver.inc(semTag, bumpType, preName))
   const tagSuffix =
     nextSemTag.prerelease.length > 0
       ? `-${nextSemTag.prerelease.join('.')}`
