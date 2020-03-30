@@ -73,7 +73,7 @@ function semanticVersion(tag) {
 
 function computeNextContinuous(semTag) {
   if (isPrerelease() && includeBuild()) {
-    const [name, build] = semTag.prerelease
+    let [name, build] = semTag.prerelease
     build = build || 0
 
     return `${semTag.options.tagPrefix}${semTag.major}-${name}.${build + 1}`
