@@ -21,7 +21,8 @@ jobs:
           repository: ${{ github.repository }}
           github_token: ${{ github.token }}
           version_scheme: continuous
-          prerelease: true
+          version_type: prerelease
+          include_build_number: true
 
       - name: create release
         uses: actions/create-release@v1

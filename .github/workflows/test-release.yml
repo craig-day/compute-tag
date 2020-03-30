@@ -7,6 +7,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        scheme:
+          - continuous
+          - semantic
         type:
           - null
           - prerelease
@@ -24,6 +27,7 @@ jobs:
         with:
           repository: ${{ github.repository }}
           github_token: ${{ github.token }}
+          version_scheme: ${{ matrix.scheme }}
           version_type: ${{ matrix.type }}
           prerelease_suffix: ${{ matrix.suffix }}
           include_build_number: ${{ matrix.build }}

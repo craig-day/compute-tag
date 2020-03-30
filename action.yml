@@ -19,13 +19,13 @@ inputs:
   version_scheme:
     description: The versioning scheme to use. Currently only supports `continuous` or `semantic`.
     required: false
-    default: continuous
+    default: semantic
   version_type:
     description: >
       Is this a major, minor, patch, or prerelease bump? For continuous versioning, only
       `prerelease` means anything.
     required: false
-    default: patch
+    default: prerelease
   prerelease_suffix:
     description: What to annotate a prerelease version tag with.
     required: false
