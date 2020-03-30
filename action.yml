@@ -21,19 +21,18 @@ inputs:
     required: false
     default: continuous
   version_type:
-    description: If using semantic versioning, is this a major, minor, or patch bump?
+    description: >
+      Is this a major, minor, patch, or prerelease bump? For continuous versioning, only
+      `prerelease` means anything.
     required: false
     default: patch
-  prerelease:
-    description: Treat this version as prerelease instead of a regular release.
-    required: false
-    default: 'false'
   prerelease_suffix:
     description: What to annotate a prerelease version tag with.
     required: false
     default: 'pre'
   include_build_number:
-    description: If continuous versioning, whether to append the build number to the end of prerelease tags.
+    description: >
+      If continuous versioning, whether to append the build number to the end of prerelease tags.
     required: false
     default: 'false'
 

@@ -7,9 +7,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        pre:
-          - true
-          - false
+        type:
+          - null
+          - prerelease
         suffix:
           - pre
           - alpha
@@ -24,7 +24,7 @@ jobs:
         with:
           repository: ${{ github.repository }}
           github_token: ${{ github.token }}
-          prerelease: ${{ matrix.pre }}
+          version_type: ${{ matrix.type }}
           prerelease_suffix: ${{ matrix.suffix }}
           include_build_number: ${{ matrix.build }}
 

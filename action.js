@@ -29,7 +29,7 @@ function includeBuild() {
 }
 
 function isPrerelease() {
-  return core.getInput('prerelease') == 'true'
+  return core.getInput('version_type') == Semantic.Prerelease
 }
 
 function initialTag(tag) {
