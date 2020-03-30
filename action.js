@@ -24,11 +24,19 @@ const Semantic = {
   Prerelease: 'prerelease',
 }
 
-function initialTag(tag) {
-  const pre = core.getInput('prerelease') == 'true'
-  const suffix = core.getInput('prerelease_suffix')
+function includeBuild() {
+  return core.getInput('include_build_number') == 'true'
+}
 
-  return pre ? `${tag}-${suffix}` : tag
+function isPrerelease() {
+  return core.getInput('prerelease') == 'true'
+}
+
+function initialTag(tag) {
+  const suffix = core.getInput('prerelease_suffix')
+  const newTag = isPrerelease() ? `${tag}-${suffix}` : tag
+
+  return includeBuild() ? `${newTag}.0` : newTag
 }
 
 async function existingTags() {
@@ -41,10 +49,20 @@ async function existingTags() {
 }
 
 function semanticVersion(tag) {
+  const suffix = core.getInput('prerelease_suffix')
+
   try {
     const [version, pre] = tag.split('-', 2)
     const sem = semver.parse(semver.coerce(version))
-    const prerelease = semver.prerelease(`0.0.0-${pre}`)
+    let prerelease
+
+    if (!pre && includeBuild()) {
+      prerelease = [suffix, 0]
+    } else if (!pre) {
+      prerelease = [suffix]
+    } else {
+      prerelease = semver.prerelease(`0.0.0-${pre}`)
+    }
 
     return { ...sem, prerelease }
   } catch (_) {
@@ -54,15 +72,12 @@ function semanticVersion(tag) {
 }
 
 function computeNextContinuous(semTag) {
-  const isPrerelease = core.getInput('prerelease') == 'true'
-  const includeBuild = core.getInput('include_build_number') == 'true'
-
-  if (isPrerelease && includeBuild) {
+  if (isPrerelease() && includeBuild()) {
     const [name, build] = semTag.prerelease
     build = build || 0
 
     return `${semTag.options.tagPrefix}${semTag.major}-${name}.${build + 1}`
-  } else if (isPrerelease) {
+  } else if (isPrerelease()) {
     const [name] = semTag.prerelease
 
     return `${semTag.options.tagPrefix}${semTag.major + 1}-${name}`
