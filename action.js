@@ -125,7 +125,6 @@ async function computeNextTag() {
   const semTag = semanticVersion(lastTag)
 
   core.info(`Computing the next tag based on: ${lastTag}`)
-  core.info(`Tag parsed as semantic version: ${JSON.stringify(semTag)}`)
 
   if (semTag == null) {
     core.setFailed(`Failed to parse tag: ${lastTag}`)
@@ -151,7 +150,7 @@ async function computeNextTag() {
 async function run() {
   const nextTag = await computeNextTag()
 
-  core.info(`Computed the next tag as ${nextTag}`)
+  core.info(`Computed the next tag as: ${nextTag}`)
   core.setOutput('next_tag', nextTag)
 }
 
