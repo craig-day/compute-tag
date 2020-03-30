@@ -46,8 +46,6 @@ async function existingTags() {
 }
 
 function semanticVersion(tag) {
-  const suffix = core.getInput('prerelease_suffix')
-
   try {
     const [version, pre] = tag.split('-', 2)
     const sem = semver.parse(semver.coerce(version))
@@ -101,13 +99,14 @@ function computeNextContinuous(semTag) {
 function computeNextSemantic(semTag) {
   try {
     const type = core.getInput('version_type') || 'prerelease'
+    const preName = determinePrereleaseName(semTag)
 
     switch (type) {
       case Semantic.Major:
       case Semantic.Minor:
       case Semantic.Patch:
       case Semantic.Prerelease:
-        return `${semTag.options.tagPrefix}${semver.inc(semTag, type)}`
+        return `${semTag.options.tagPrefix}${semver.inc(semTag, type, preName)}`
       default:
         core.setFailed(
           `Unsupported semantic version type ${type}. Must be one of (${Object.values(
