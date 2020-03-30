@@ -19,7 +19,6 @@ jobs:
       - id: compute_tag
         uses: ./
         with:
-          repository: ${{ github.repository }}
           github_token: ${{ github.token }}
           version_scheme: ${{ matrix.scheme }}
           version_type: ${{ matrix.type || (matrix.scheme == 'semantic' && 'major') }}

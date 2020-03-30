@@ -18,7 +18,6 @@ jobs:
       - id: compute_tag
         uses: ./
         with:
-          repository: ${{ github.repository }}
           github_token: ${{ github.token }}
           version_scheme: continuous
           version_type: prerelease

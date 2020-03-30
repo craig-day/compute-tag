@@ -11,7 +11,6 @@ This can be helpful to automatically compute tags and pipe them to the
 
 | Parameter           | Description                                                                                      | Required | Default      |
 | ------------------- | ------------------------------------------------------------------------------------------------ | -------- | ------------ |
-| `repository`        | Full name, `owner`/`repo`. Usually `${{ github.repository }}`                                    | **Y**    | N/A          |
 | `github_token`      | A Github token, usually `${{ github.token }}`                                                    | **Y**    | N/A          |
 | `version_scheme`    | One of (`continuous`, `semantic`)                                                                | N        | `semantic`   |
 | `version_type`      | One of (`major`, `minor`, `patch`, `prerelease`). For continuous, only `prerelease` has meaning. | N        | `prerelease` |
@@ -28,7 +27,6 @@ steps:
   - id: compute_tag
     uses: craig-day/compute-tag@v4
     with:
-      repository: ${{ github.repository }}
       github_token: ${{ github.token }}
 ```
 
@@ -49,7 +47,6 @@ jobs:
       - id: compute_tag
         uses: craig-day/compute-tag@v4
         with:
-          repository: ${{ github.repository }}
           github_token: ${{ github.token }}
           version_scheme: continuous
           version_type: prerelease

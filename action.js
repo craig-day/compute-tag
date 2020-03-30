@@ -1,15 +1,13 @@
 const core = require('@actions/core')
 const github = require('@actions/github')
 const semver = require('semver')
+const process = require('process')
 
 const octokit = new github.GitHub(
   core.getInput('github_token', { required: true })
 )
 
-const [owner, repo] = core
-  .getInput('repository', { required: true })
-  .split('/', 2)
-
+const [owner, repo] = process.env['GITHUB_REPOSITORY'].split('/', 2)
 const requestOpts = { owner, repo }
 
 const Scheme = {
