@@ -54,16 +54,6 @@ jobs:
         uses: craig-day/compute-tag@v5
         with:
           github_token: ${{ github.token }}
-
-      - name: create release
-        uses: actions/create-release@v4
-        with:
-          tag_name: ${{ steps.compute_tag.outputs.next_tag }}
-          release_name: ${{ steps.compute_tag.outputs.next_tag }}
-          body: >
-            Automatic release of ${{ steps.compute_tag.outputs.next_tag }}
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
 ```
 
 _Sample Logs_:
@@ -92,16 +82,6 @@ jobs:
         with:
           github_token: ${{ github.token }}
           version_type: patch
-
-      - name: create release
-        uses: actions/create-release@v4
-        with:
-          tag_name: ${{ steps.compute_tag.outputs.next_tag }}
-          release_name: ${{ steps.compute_tag.outputs.next_tag }}
-          body: >
-            Automatic release of ${{ steps.compute_tag.outputs.next_tag }}
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
 ```
 
 _Sample Logs_:
@@ -131,16 +111,6 @@ jobs:
           github_token: ${{ github.token }}
           version_scheme: continuous
           version_type: prerelease
-
-      - name: create release
-        uses: actions/create-release@v4
-        with:
-          tag_name: ${{ steps.compute_tag.outputs.next_tag }}
-          release_name: ${{ steps.compute_tag.outputs.next_tag }}
-          body: >
-            Automatic release of ${{ steps.compute_tag.outputs.next_tag }}
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
 ```
 
 _Sample Logs_:
@@ -176,4 +146,35 @@ _Sample Logs_:
 ```
 Computing the next tag based on: v5-pre.4
 Computed the next tag as: v5.0.0-pre.5
+```
+
+**Create a GitHub Release for each push to `master`**
+
+```yaml
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - id: compute_tag
+        uses: craig-day/compute-tag@v5
+        with:
+          github_token: ${{ github.token }}
+          version_scheme: semantic
+
+      - name: create release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ steps.compute_tag.outputs.next_tag }}
+          release_name: ${{ steps.compute_tag.outputs.next_tag }}
+          body: >
+            Automatic release of ${{ steps.compute_tag.outputs.next_tag }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 ```
