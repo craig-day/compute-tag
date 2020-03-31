@@ -23,9 +23,7 @@ inputs:
     required: false
     default: semantic
   version_type:
-    description: >
-      Is this a major, minor, patch, or prerelease bump? For continuous versioning, only
-      `prerelease` means anything.
+    description: Is this a major, minor, patch, or prerelease bump?
     required: false
     default: prerelease
   prerelease_suffix:

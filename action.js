@@ -19,6 +19,7 @@ const Semantic = {
   Major: 'major',
   Minor: 'minor',
   Patch: 'patch',
+  Premajor: 'premajor',
   Prerelease: 'prerelease',
 }
 
@@ -67,7 +68,9 @@ function determineContinuousBumpType(semTag) {
 
   switch (type) {
     case Semantic.Prerelease:
-      return hasExistingPrerelease ? Semantic.Prerelease : 'premajor'
+      return hasExistingPrerelease ? Semantic.Prerelease : Semantic.Premajor
+    case Semantic.Premajor:
+      return Semantic.Premajor
     default:
       return Semantic.Major
   }
@@ -105,6 +108,7 @@ function computeNextSemantic(semTag) {
       case Semantic.Major:
       case Semantic.Minor:
       case Semantic.Patch:
+      case Semantic.Premajor:
       case Semantic.Prerelease:
         return `${semTag.options.tagPrefix}${semver.inc(semTag, type, preName)}`
       default:
