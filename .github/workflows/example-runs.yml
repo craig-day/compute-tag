@@ -7,6 +7,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        last:
+          - null
+          - v1000
+          - v1000.0.4
+          - v1000-pre.2
+          - v1000.0.3-beta.5
         scheme:
           - continuous
           - semantic
@@ -23,6 +29,7 @@ jobs:
         uses: ./
         with:
           github_token: ${{ github.token }}
+          tag: ${{ matrix.last }}
           version_scheme: ${{ matrix.scheme }}
           version_type: ${{ matrix.type }}
 

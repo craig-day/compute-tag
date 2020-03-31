@@ -13,6 +13,11 @@ inputs:
   github_token:
     description: A Github token for the repo, usually `{{ github.token }}`.
     required: true
+  tag:
+    description: >
+      A manual tag to compute the next version of. If not specified, it will fetch the most recent
+      tag for the repo.
+    required: false
   version_scheme:
     description: The versioning scheme to use. Currently only supports `continuous` or `semantic`.
     required: false

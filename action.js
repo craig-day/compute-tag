@@ -119,13 +119,28 @@ function computeNextSemantic(semTag) {
   }
 }
 
+async function computeLastTag() {
+  const givenTag = core.getInput('tag')
+
+  if (isNullString(givenTag)) {
+    const recentTags = await existingTags()
+
+    if (recentTags.length < 1) {
+      return null
+    } else {
+      return recentTags.shift().ref.replace('refs/tags/', '')
+    }
+  } else {
+    return givenTag
+  }
+}
+
 async function computeNextTag() {
   const scheme = core.getInput('version_scheme')
-
-  const recentTags = await existingTags()
+  const lastTag = await computeLastTag()
 
   // Handle zero-state where no tags exist for the repo
-  if (recentTags.length < 1) {
+  if (!lastTag) {
     switch (scheme) {
       case Scheme.Continuous:
         return initialTag('v1')
@@ -137,7 +152,6 @@ async function computeNextTag() {
     }
   }
 
-  const lastTag = recentTags.shift().ref.replace('refs/tags/', '')
   const semTag = semanticVersion(lastTag)
 
   core.info(`Computing the next tag based on: ${lastTag}`)
