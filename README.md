@@ -27,7 +27,7 @@ This can be helpful to automatically compute tags and pipe them to the
 ```yaml
 steps:
   - id: compute_tag
-    uses: craig-day/compute-tag@v7
+    uses: craig-day/compute-tag@v9
     with:
       github_token: ${{ github.token }}
 ```
