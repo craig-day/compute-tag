@@ -34,3 +34,5 @@ inputs:
 outputs:
   next_tag:
     description: The computed next tag to be created
+  previous_tag:
+    description: The tag that was used to compute next_tag

@@ -156,9 +156,10 @@ async function computeNextTag() {
     }
   }
 
-  const semTag = semanticVersion(lastTag)
-
   core.info(`Computing the next tag based on: ${lastTag}`)
+  core.setOutput('previous_tag', lastTag)
+
+  const semTag = semanticVersion(lastTag)
 
   if (semTag == null) {
     core.setFailed(`Failed to parse tag: ${lastTag}`)

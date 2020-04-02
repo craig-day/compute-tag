@@ -10,17 +10,18 @@ This can be helpful to automatically compute tags and pipe them to the
 
 ## Inputs
 
-| Parameter           | Description                                                                                      | Required | Default      |
-| ------------------- | ------------------------------------------------------------------------------------------------ | -------- | ------------ |
-| `github_token`      | A Github token, usually `${{ github.token }}`.                                                   | **Y**    | N/A          |
-| `tag`               | The tag to compute the next version of. If not specified, the most recent tag in the repo.       | N        | Latest       |
-| `version_scheme`    | One of (`continuous`, `semantic`).                                                               | N        | `semantic`   |
-| `version_type`      | One of (`major`, `minor`, `patch`, `prerelease`). For continuous, only `prerelease` has meaning. | N        | `prerelease` |
-| `prerelease_suffix` | The suffix added to a prerelease tag, if none already exists.                                    | N        | `beta`       |
+| Parameter           | Description                                                                                | Required | Default      |
+| ------------------- | ------------------------------------------------------------------------------------------ | -------- | ------------ |
+| `github_token`      | A Github token, usually `${{ github.token }}`.                                             | **Y**    | N/A          |
+| `tag`               | The tag to compute the next version of. If not specified, the most recent tag in the repo. | N        | Latest       |
+| `version_scheme`    | One of (`continuous`, `semantic`).                                                         | N        | `semantic`   |
+| `version_type`      | One of (`major`, `minor`, `patch`, `prerelease`, `premajor`).                              | N        | `prerelease` |
+| `prerelease_suffix` | The suffix added to a prerelease tag, if none already exists.                              | N        | `beta`       |
 
 ## Output
 
 - `next_tag` The computed next tag.
+- `previous_tag` The tag used to compute `next_tag`.
 
 ## Usage
 
