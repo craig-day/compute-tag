@@ -28,7 +28,7 @@ This can be helpful to automatically compute tags and pipe them to the
 ```yaml
 steps:
   - id: compute_tag
-    uses: craig-day/compute-tag@v9
+    uses: craig-day/compute-tag@v10
     with:
       github_token: ${{ github.token }}
 ```
@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: compute_tag
-        uses: craig-day/compute-tag@v9
+        uses: craig-day/compute-tag@v10
         with:
           github_token: ${{ github.token }}
 ```
@@ -82,7 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: compute_tag
-        uses: craig-day/compute-tag@v9
+        uses: craig-day/compute-tag@v10
         with:
           github_token: ${{ github.token }}
           version_type: patch
@@ -112,7 +112,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: compute_tag
-        uses: craig-day/compute-tag@v9
+        uses: craig-day/compute-tag@v10
         with:
           github_token: ${{ github.token }}
           version_scheme: continuous
@@ -143,7 +143,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: compute_tag
-        uses: craig-day/compute-tag@v9
+        uses: craig-day/compute-tag@v10
         with:
           github_token: ${{ github.token }}
           version_scheme: semantic
@@ -173,7 +173,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: compute_tag
-        uses: craig-day/compute-tag@v9
+        uses: craig-day/compute-tag@v10
         with:
           github_token: ${{ github.token }}
           version_scheme: semantic
