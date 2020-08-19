@@ -5,8 +5,8 @@ on:
     branches:
       - master
     paths:
-      - action.yml
-      - action.js
+      - src/action.yml
+      - src/action.js
       - package.json
 
 jobs:
