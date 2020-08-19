@@ -7,7 +7,7 @@ branding:
 
 runs:
   using: node12
-  main: action.js
+  main: dist/index.js
 
 inputs:
   github_token:
@@ -30,6 +30,9 @@ inputs:
     description: What to annotate a prerelease version tag with.
     required: false
     default: 'beta'
+  prefix:
+    description: 'Preserve a known prefix in front of the tag. Example: sub-package-v1.2.3'
+    required: false
 
 outputs:
   next_tag:

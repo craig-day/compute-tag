@@ -17,6 +17,7 @@ This can be helpful to automatically compute tags and pipe them to the
 | `version_scheme`    | One of (`continuous`, `semantic`).                                                         | N        | `semantic`   |
 | `version_type`      | One of (`major`, `minor`, `patch`, `prerelease`, `premajor`).                              | N        | `prerelease` |
 | `prerelease_suffix` | The suffix added to a prerelease tag, if none already exists.                              | N        | `beta`       |
+| `prefix`            | Preserve a known prefix in front of the tag. `Example: sub-package-v1.2.3'`                | N        | N/A          |
 
 ## Output
 
