@@ -79,7 +79,7 @@ function determineContinuousBumpType(semTag) {
 function determinePrereleaseName(semTag) {
   const hasExistingPrerelease = semTag.prerelease.length > 0
 
-  if (hasExistingPrerelease) {
+  if (hasExistingPrerelease && !core.getInput('prerelease_suffix')) {
     const [name, _] = semTag.prerelease
     return name
   } else {
