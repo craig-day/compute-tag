@@ -10,13 +10,14 @@ This can be helpful to automatically compute tags and pipe them to the
 
 ## Inputs
 
-| Parameter           | Description                                                                                | Required | Default      |
-| ------------------- | ------------------------------------------------------------------------------------------ | -------- | ------------ |
-| `github_token`      | A Github token, usually `${{ github.token }}`.                                             | **Y**    | N/A          |
-| `tag`               | The tag to compute the next version of. If not specified, the most recent tag in the repo. | N        | Latest       |
-| `version_scheme`    | One of (`continuous`, `semantic`).                                                         | N        | `semantic`   |
-| `version_type`      | One of (`major`, `minor`, `patch`, `prerelease`, `premajor`).                              | N        | `prerelease` |
-| `prerelease_suffix` | The suffix added to a prerelease tag, if none already exists.                              | N        | `beta`       |
+| Parameter           | Description                                                                                                                                                                                                                                                                                                           | Required | Default      |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------ |
+| `github_token`      | A Github token, usually `${{ github.token }}`.                                                                                                                                                                                                                                                                        | **Y**    | N/A          |
+| `tag`               | The tag to compute the next version of. If not specified, the most recent tag in the repo.                                                                                                                                                                                                                            | N        | Latest       |
+| `branch`            | The branch to find compute the tag for. This requires iteration of all tags for the repo and the commits for the branch to find a tag for a commit on the branch. For large repositories this can be very slow. It is highly recommended that `github_token` be supplied to prevent rate limit errors when searching. | N        | N/A          |
+| `version_scheme`    | One of (`continuous`, `semantic`).                                                                                                                                                                                                                                                                                    | N        | `semantic`   |
+| `version_type`      | One of (`major`, `minor`, `patch`, `prerelease`, `premajor`).                                                                                                                                                                                                                                                         | N        | `prerelease` |
+| `prerelease_suffix` | The suffix added to a prerelease tag, if none already exists.                                                                                                                                                                                                                                                         | N        | `beta`       |
 
 ## Output
 
