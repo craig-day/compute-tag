@@ -137,12 +137,9 @@ async function findMatchingLastTag(tags, branch = null) {
     const commits = await commitsForBranch(branch)
     let latestTag
 
-    commits.forEach((commit) => {
-      const tag = tags.find((tag) => tag.object.sha === commit.sha)
-      if (tag) {
-        latestTag = tag
-        break
-      }
+    commits.find((commit) => {
+      latestTag = tags.find((tag) => tag.object.sha === commit.sha)
+      return latestTag
     })
 
     if (latestTag) {
