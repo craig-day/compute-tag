@@ -46,6 +46,15 @@ async function existingTags() {
   return refs.reverse()
 }
 
+async function commitsForBranch(branch) {
+  const { data: commits } = await octokit.repos.listCommits({
+    ...requestOpts,
+    sha: branch,
+  })
+
+  return commits
+}
+
 function semanticVersion(tag) {
   try {
     const [version, pre] = tag.split('-', 2)
@@ -123,16 +132,37 @@ function computeNextSemantic(semTag) {
   }
 }
 
-async function computeLastTag() {
-  const givenTag = core.getInput('tag')
+async function findMatchingLastTag(tags, branch = null) {
+  if (branch) {
+    const commits = await commitsForBranch(branch)
+    let latestTag
 
+    commits.forEach((commit) => {
+      const tag = tags.find((tag) => tag.object.sha === commit.sha)
+      if (tag) {
+        latestTag = tag
+        break
+      }
+    })
+
+    if (latestTag) {
+      return latestTag.ref.replace('refs/tags/', '')
+    } else {
+      core.setFailed(`Failed to find a tag for any commit on branch: ${branch}`)
+    }
+  } else {
+    return tags.shift().ref.replace('refs/tags/', '')
+  }
+}
+
+async function computeLastTag(givenTag, branch = null) {
   if (isNullString(givenTag)) {
     const recentTags = await existingTags()
 
     if (recentTags.length < 1) {
       return null
     } else {
-      return recentTags.shift().ref.replace('refs/tags/', '')
+      return findMatchingLastTag(recentTags, branch)
     }
   } else {
     return givenTag
@@ -141,7 +171,10 @@ async function computeLastTag() {
 
 async function computeNextTag() {
   const scheme = core.getInput('version_scheme')
-  const lastTag = await computeLastTag()
+  const branch = core.getInput('branch')
+  const givenTag = core.getInput('tag')
+
+  const lastTag = await computeLastTag(givenTag, branch)
 
   // Handle zero-state where no tags exist for the repo
   if (!lastTag) {

@@ -18,6 +18,13 @@ inputs:
       A manual tag to compute the next version of. If not specified, it will fetch the most recent
       tag for the repo.
     required: false
+  branch:
+    description: >
+      The branch to find compute the tag for. This requires iteration of all tags for the repo and
+      the commits for the branch to find a tag for a commit on the branch. For large repositories
+      this can be very slow. It is highly recommended that `github_token` be supplied to prevent
+      rate limit errors when searching.
+    required: false
   version_scheme:
     description: The versioning scheme to use. Currently only supports `continuous` or `semantic`.
     required: false
