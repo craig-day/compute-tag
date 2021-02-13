@@ -33,6 +33,7 @@ jobs:
         with:
           github_token: ${{ github.token }}
           tag: ${{ matrix.last }}
+          branch: ${{ matrix.branch }}
           version_scheme: ${{ matrix.scheme }}
           version_type: ${{ matrix.type }}
 
