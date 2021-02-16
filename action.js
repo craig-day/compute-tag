@@ -38,19 +38,27 @@ function initialTag(tag) {
 }
 
 async function existingTags() {
-  const { data: refs } = await octokit.git.listMatchingRefs({
-    ...requestOpts,
-    ref: 'tags',
-  })
+  const { data: refs } = await octokit.git
+    .listMatchingRefs({
+      ...requestOpts,
+      ref: 'tags',
+    })
+    .catch((e) => {
+      core.setFailed(`Failed to fetch matching refs (tags): ${e}`)
+    })
 
   return refs.reverse()
 }
 
 async function commitsForBranch(branch) {
-  const { data: commits } = await octokit.repos.listCommits({
-    ...requestOpts,
-    sha: branch,
-  })
+  const { data: commits } = await octokit.repos
+    .listCommits({
+      ...requestOpts,
+      sha: branch,
+    })
+    .catch((e) => {
+      core.setFailed(`Failed to fetch commits for branch '${branch}' : ${e}`)
+    })
 
   return commits
 }
