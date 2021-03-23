@@ -164,7 +164,9 @@ async function computeLastTag(givenTag, branch = null) {
     if (recentTags.length < 1) {
       return null
     } else {
-      return findMatchingLastTag(recentTags, branch)
+      return findMatchingLastTag(recentTags, branch).catch((error) => {
+        core.setFailed(`Failed to mind matching last tag with error ${error}`)
+      })
     }
   } else {
     return givenTag
@@ -218,14 +220,18 @@ async function computeNextTag() {
 }
 
 async function run() {
-  const nextTag = await computeNextTag()
+  const nextTag = await computeNextTag().catch((error) => {
+    core.setFailed(`Failed to compute next tag with error ${error}`)
+  })
 
   core.info(`Computed the next tag as: ${nextTag}`)
   core.setOutput('next_tag', nextTag)
 }
 
 try {
-  run()
+  run().catch((error) => {
+    core.setFailed(`Action failed with error ${error}`)
+  })
 } catch (error) {
   core.setFailed(`Action failed with error ${error}`)
 }
