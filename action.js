@@ -38,20 +38,19 @@ function initialTag(tag) {
 }
 
 async function existingTags() {
-  const { data: refs } = await octokit
+  return await octokit
     .paginate(octokit.git.listMatchingRefs, {
       ...requestOpts,
       ref: 'tags',
     })
+    .then((refs) => refs.reverse())
     .catch((e) => {
       core.setFailed(`Failed to fetch matching refs (tags): ${e}`)
     })
-
-  return refs.reverse()
 }
 
 async function commitsForBranch(branch) {
-  const { data: commits } = await octokit
+  return await octokit
     .paginate(octokit.repos.listCommits, {
       ...requestOpts,
       sha: branch,
@@ -59,8 +58,6 @@ async function commitsForBranch(branch) {
     .catch((e) => {
       core.setFailed(`Failed to fetch commits for branch '${branch}' : ${e}`)
     })
-
-  return commits
 }
 
 function semanticVersion(tag) {
