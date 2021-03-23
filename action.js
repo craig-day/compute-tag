@@ -39,10 +39,11 @@ function initialTag(tag) {
 
 async function existingTags() {
   const result = octokit
-    .paginate(octokit.git.listMatchingRefs, {
-      ...requestOpts,
-      ref: 'tags',
-    })
+    .paginate(
+      octokit.git.listMatchingRefs,
+      { ...requestOpts, ref: 'tags' },
+      ({ data: refs }) => refs
+    )
     .then((refs) => {
       console.log(refs)
       refs.reverse()
