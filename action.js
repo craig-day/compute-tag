@@ -38,8 +38,8 @@ function initialTag(tag) {
 }
 
 async function existingTags() {
-  const { data: refs } = await octokit.git
-    .listMatchingRefs({
+  const { data: refs } = await octokit
+    .paginate(octokit.git.listMatchingRefs, {
       ...requestOpts,
       ref: 'tags',
     })
@@ -51,8 +51,8 @@ async function existingTags() {
 }
 
 async function commitsForBranch(branch) {
-  const { data: commits } = await octokit.repos
-    .listCommits({
+  const { data: commits } = await octokit
+    .paginate(octokit.repos.listCommits, {
       ...requestOpts,
       sha: branch,
     })
