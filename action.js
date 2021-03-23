@@ -43,7 +43,10 @@ async function existingTags() {
       ...requestOpts,
       ref: 'tags',
     })
-    .then((refs) => refs.reverse())
+    .then((refs) => {
+      console.log(refs)
+      refs.reverse()
+    })
     .catch((e) => {
       core.setFailed(`Failed to fetch matching refs (tags): ${e}`)
     })
@@ -165,7 +168,7 @@ async function computeLastTag(givenTag, branch = null) {
       return null
     } else {
       return findMatchingLastTag(recentTags, branch).catch((error) => {
-        core.setFailed(`Failed to mind matching last tag with error ${error}`)
+        core.setFailed(`Failed to find matching last tag with error ${error}`)
       })
     }
   } else {
