@@ -47,7 +47,10 @@ async function existingTags() {
 
   return await octokit
     .paginate(options)
-    .then((refs) => refs.reverse())
+    .then((refs) => {
+      core.info('Tags fetch complete.')
+      return refs.reverse()
+    })
     .catch((e) => {
       core.setFailed(`Failed to fetch matching refs (tags): ${e}`)
     })
@@ -59,19 +62,21 @@ async function latestTagOnBranch(branch, tags) {
     sha: branch,
   })
 
+  let latestTag
+
   return await octokit
     .paginate(options, (response, done) => {
-      let latestTag
-
       response.data.find((commit) => {
         latestTag = tags.find((tag) => tag.object.sha === commit.sha)
       })
 
       if (latestTag) {
         done()
-        return latestTag
       }
+
+      return response.data
     })
+    .then((_commits) => latestTag)
     .catch((e) => {
       core.setFailed(`Failed to fetch commits for branch '${branch}' : ${e}`)
     })
