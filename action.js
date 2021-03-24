@@ -43,9 +43,12 @@ async function existingTags() {
     ref: 'tags',
   })
 
-  return await octokit.paginate(options).catch((e) => {
-    core.setFailed(`Failed to fetch matching refs (tags): ${e}`)
-  })
+  return await octokit
+    .paginate(options)
+    .then((refs) => refs.reverse())
+    .catch((e) => {
+      core.setFailed(`Failed to fetch matching refs (tags): ${e}`)
+    })
 }
 
 async function commitsForBranch(branch) {
