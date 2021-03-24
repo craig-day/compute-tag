@@ -46,7 +46,7 @@ async function existingTags() {
     )
     .then((refs) => {
       console.log(refs)
-      refs.reverse()
+      return refs.reverse()
     })
     .catch((e) => {
       core.setFailed(`Failed to fetch matching refs (tags): ${e}`)
@@ -57,9 +57,14 @@ async function existingTags() {
 
 async function commitsForBranch(branch) {
   const result = octokit
-    .paginate(octokit.repos.listCommits, {
-      ...requestOpts,
-      sha: branch,
+    .paginate(
+      octokit.repos.listCommits,
+      { ...requestOpts, sha: branch },
+      ({ data: commits }) => commits
+    )
+    .then((commits) => {
+      console.log(commits)
+      return commits
     })
     .catch((e) => {
       core.setFailed(`Failed to fetch commits for branch '${branch}' : ${e}`)
