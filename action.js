@@ -73,27 +73,6 @@ async function existingTags() {
     })
 }
 
-// async function commitsForBranch(branch) {
-//   const options = octokit.repos.listCommits.endpoint.merge({
-//     ...requestOpts,
-//     sha: branch,
-//   })
-
-//   core.info(
-//     `Fetching commits for ref ${branch}. This may take a while on large repositories.`
-//   )
-
-//   return await octokit
-//     .paginate(options)
-//     .then((commits) => {
-//       core.info('Commits fetch complete.')
-//       return commits
-//     })
-//     .catch((e) => {
-//       core.setFailed(`Failed to fetch commits for branch '${branch}' : ${e}`)
-//     })
-// }
-
 async function latestTagForBranch(allTags, branch) {
   const options = octokit.repos.listCommits.endpoint.merge({
     ...requestOpts,
@@ -113,8 +92,6 @@ async function latestTagForBranch(allTags, branch) {
           break
         }
       }
-
-      core.info('No tag found yet, fetching more commits.')
 
       return response.data
     })
@@ -213,14 +190,6 @@ function computeNextSemantic(semTag) {
 
 async function findMatchingLastTag(tags, branch = null) {
   if (branch) {
-    // const commits = await commitsForBranch(branch)
-    // let latestTag
-
-    // commits.find((commit) => {
-    //   latestTag = tags.find((tag) => tag.object.sha === commit.sha)
-    //   return latestTag
-    // })
-
     const latestTag = await latestTagForBranch(tags, branch)
 
     if (latestTag) {
