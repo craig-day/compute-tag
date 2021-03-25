@@ -9,6 +9,17 @@ const Octokit = github.GitHub.plugin([throttling, retry])
 
 const octokit = new Octokit({
   auth: core.getInput('github_token', { required: true }),
+  throttle: {
+    onRateLimit: (_retryAfter, options, _octokit) => {
+      core.info(`Rate limit exceeded for ${options.method} ${options.url}`)
+      return true
+    },
+    onAbuseLimit: (_retryAfter, options, _octokit) => {
+      core.info(
+        `Abuse detected for ${options.method} ${options.url}. Not retrying.`
+      )
+    },
+  },
 })
 
 const [owner, repo] = process.env['GITHUB_REPOSITORY'].split('/', 2)
