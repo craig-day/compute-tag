@@ -71,30 +71,15 @@ async function existingTags() {
     })
 }
 
-async function latestTagOnBranch(branch, tags) {
+async function commitsForBranch(branch) {
   const options = octokit.repos.listCommits.endpoint.merge({
     ...requestOpts,
     sha: branch,
   })
 
-  let latestTag
-
-  return await octokit
-    .paginate(options, (response, done) => {
-      response.data.find((commit) => {
-        latestTag = tags.find((tag) => tag.object.sha === commit.sha)
-      })
-
-      if (latestTag) {
-        done()
-      }
-
-      return response.data
-    })
-    .then((_commits) => latestTag)
-    .catch((e) => {
-      core.setFailed(`Failed to fetch commits for branch '${branch}' : ${e}`)
-    })
+  return await octokit.paginate(options).catch((e) => {
+    core.setFailed(`Failed to fetch commits for branch '${branch}' : ${e}`)
+  })
 }
 
 function semanticVersion(tag) {
@@ -176,7 +161,13 @@ function computeNextSemantic(semTag) {
 
 async function findMatchingLastTag(tags, branch = null) {
   if (branch) {
-    const latestTag = await latestTagOnBranch(branch, tags)
+    const commits = await commitsForBranch(branch)
+    let latestTag
+
+    commits.find((commit) => {
+      latestTag = tags.find((tag) => tag.object.sha === commit.sha)
+      return latestTag
+    })
 
     if (latestTag) {
       return latestTag.ref.replace('refs/tags/', '')
