@@ -19,6 +19,7 @@
   "dependencies": {
     "@actions/core": "^1.2.6",
     "@actions/github": "^2.1.1",
+    "@octokit/core": "^3.3.1",
     "@octokit/plugin-retry": "^3.0.7",
     "@octokit/plugin-throttling": "^3.4.1",
     "semver": "^7.1.3"
