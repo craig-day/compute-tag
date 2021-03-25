@@ -58,7 +58,9 @@ async function existingTags() {
     ref: 'tags',
   })
 
-  core.info('Fetching existing tags. This may take a while.')
+  core.info(
+    'Fetching existing tags. This may take a while on large repositories.'
+  )
 
   return await octokit
     .paginate(options)
@@ -67,19 +69,69 @@ async function existingTags() {
       return refs.reverse()
     })
     .catch((e) => {
-      core.setFailed(`Failed to fetch matching refs (tags): ${e}`)
+      core.setFailed(`Failed to fetch tags: ${e}`)
     })
 }
 
-async function commitsForBranch(branch) {
+// async function commitsForBranch(branch) {
+//   const options = octokit.repos.listCommits.endpoint.merge({
+//     ...requestOpts,
+//     sha: branch,
+//   })
+
+//   core.info(
+//     `Fetching commits for ref ${branch}. This may take a while on large repositories.`
+//   )
+
+//   return await octokit
+//     .paginate(options)
+//     .then((commits) => {
+//       core.info('Commits fetch complete.')
+//       return commits
+//     })
+//     .catch((e) => {
+//       core.setFailed(`Failed to fetch commits for branch '${branch}' : ${e}`)
+//     })
+// }
+
+async function latestTagForBranch(allTags, branch) {
   const options = octokit.repos.listCommits.endpoint.merge({
     ...requestOpts,
     sha: branch,
   })
 
-  return await octokit.paginate(options).catch((e) => {
-    core.setFailed(`Failed to fetch commits for branch '${branch}' : ${e}`)
-  })
+  core.info(
+    `Fetching commits for ref ${branch}. This may take a while on large repositories.`
+  )
+
+  return await octokit
+    .paginate(options, (response, done) => {
+      for (const commit of response.data) {
+        if (allTags.find((tag) => tag.object.sha === commit.sha)) {
+          core.info('Finished fetching commits, found a tag match.')
+          done()
+          break
+        }
+      }
+
+      core.info('No tag found yet, fetching more commits.')
+
+      return response.data
+    })
+    .then((commits) => {
+      core.info(`Fetched ${commits.length} commits`)
+      let latestTag
+
+      for (const commit of commits) {
+        latestTag = allTags.find((tag) => tag.object.sha === commit.sha)
+        if (latestTag) break
+      }
+
+      return latestTag
+    })
+    .catch((e) => {
+      core.setFailed(`Failed to fetch commits for branch '${branch}' : ${e}`)
+    })
 }
 
 function semanticVersion(tag) {
@@ -161,13 +213,15 @@ function computeNextSemantic(semTag) {
 
 async function findMatchingLastTag(tags, branch = null) {
   if (branch) {
-    const commits = await commitsForBranch(branch)
-    let latestTag
+    // const commits = await commitsForBranch(branch)
+    // let latestTag
 
-    commits.find((commit) => {
-      latestTag = tags.find((tag) => tag.object.sha === commit.sha)
-      return latestTag
-    })
+    // commits.find((commit) => {
+    //   latestTag = tags.find((tag) => tag.object.sha === commit.sha)
+    //   return latestTag
+    // })
+
+    const latestTag = await latestTagForBranch(tags, branch)
 
     if (latestTag) {
       return latestTag.ref.replace('refs/tags/', '')
