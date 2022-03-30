@@ -65,7 +65,7 @@ async function existingTags() {
       `{
         repository(owner: "${owner}", name: "${repo}") {
           refs(
-            first: 100
+            first: ${core.getInput('tag_fetch_depth') || 10}
             refPrefix: "refs/tags/"
             orderBy: { field: TAG_COMMIT_DATE, direction: DESC }
           ) {

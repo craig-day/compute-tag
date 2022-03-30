@@ -25,6 +25,10 @@ inputs:
       this can be very slow. It is highly recommended that `github_token` be supplied to prevent
       rate limit errors when searching.
     required: false
+  tag_fetch_depth:
+    description: The number of most recent tags to fetch when attempting to find a match on the branch.
+    required: false
+    default: 10
   version_scheme:
     description: The versioning scheme to use. Currently only supports `continuous` or `semantic`.
     required: false
