@@ -63,7 +63,7 @@ async function existingTags() {
   return await octokit
     .graphql(
       `{
-        repository(owner: ${owner}, name: ${repo}) {
+        repository(owner: "${owner}", name: "${repo}") {
           refs(
             first: 100
             refPrefix: "refs/tags/"
