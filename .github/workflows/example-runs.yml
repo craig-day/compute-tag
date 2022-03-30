@@ -34,6 +34,7 @@ jobs:
           github_token: ${{ github.token }}
           tag: ${{ matrix.last }}
           branch: ${{ matrix.branch }}
+          tag_fetch_depth: 20
           version_scheme: ${{ matrix.scheme }}
           version_type: ${{ matrix.type }}
 

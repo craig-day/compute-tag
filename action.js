@@ -4,22 +4,27 @@ const semver = require('semver')
 const process = require('process')
 const { throttling } = require('@octokit/plugin-throttling')
 const { retry } = require('@octokit/plugin-retry')
+const { Octokit } = require('@octokit/core');
 
-const Octokit = github.GitHub.plugin([throttling, retry])
+const GitClient = github.GitHub.plugin([throttling, retry])
 
-const octokit = new Octokit({
+const gitClient = new GitClient({
   auth: core.getInput('github_token', { required: true }),
   throttle: {
-    onRateLimit: (_retryAfter, options, _octokit) => {
+    onRateLimit: (_retryAfter, options, _gitClient) => {
       core.info(`Rate limit exceeded for ${options.method} ${options.url}`)
       return true
     },
-    onAbuseLimit: (_retryAfter, options, _octokit) => {
+    onAbuseLimit: (_retryAfter, options, _gitClient) => {
       core.info(
         `Abuse detected for ${options.method} ${options.url}. Not retrying.`
       )
     },
   },
+})
+
+const octokit = new Octokit({
+  auth: core.getInput('github_token', { required: true })
 })
 
 const [owner, repo] = process.env['GITHUB_REPOSITORY'].split('/', 2)
@@ -53,20 +58,28 @@ function initialTag(tag) {
 }
 
 async function existingTags() {
-  const options = octokit.git.listMatchingRefs.endpoint.merge({
-    ...requestOpts,
-    ref: 'tags',
-  })
-
-  core.info(
-    'Fetching existing tags. This may take a while on large repositories.'
-  )
+  core.info('Fetching tags.')
 
   return await octokit
-    .paginate(options)
-    .then((refs) => {
-      core.info('Tags fetch complete.')
-      return refs.reverse()
+    .graphql(
+      `{
+        repository(owner: "${owner}", name: "${repo}") {
+          refs(
+            first: ${core.getInput('tag_fetch_depth') || 10}
+            refPrefix: "refs/tags/"
+            orderBy: { field: TAG_COMMIT_DATE, direction: DESC }
+          ) {
+            nodes {
+              ref: name
+              object: target {
+                sha: oid
+              }
+            }
+          }
+        }
+      }`
+    ).then((result) => {
+      return result.repository.refs.nodes
     })
     .catch((e) => {
       core.setFailed(`Failed to fetch tags: ${e}`)
@@ -74,7 +87,7 @@ async function existingTags() {
 }
 
 async function latestTagForBranch(allTags, branch) {
-  const options = octokit.repos.listCommits.endpoint.merge({
+  const options = gitClient.repos.listCommits.endpoint.merge({
     ...requestOpts,
     sha: branch,
   })
@@ -83,7 +96,7 @@ async function latestTagForBranch(allTags, branch) {
     `Fetching commits for ref ${branch}. This may take a while on large repositories.`
   )
 
-  return await octokit
+  return await gitClient
     .paginate(options, (response, done) => {
       for (const commit of response.data) {
         if (allTags.find((tag) => tag.object.sha === commit.sha)) {
