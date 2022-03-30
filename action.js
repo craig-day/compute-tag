@@ -53,20 +53,28 @@ function initialTag(tag) {
 }
 
 async function existingTags() {
-  const options = octokit.git.listMatchingRefs.endpoint.merge({
-    ...requestOpts,
-    ref: 'tags',
-  })
-
-  core.info(
-    'Fetching existing tags. This may take a while on large repositories.'
-  )
+  core.info('Fetching tags.')
 
   return await octokit
-    .paginate(options)
-    .then((refs) => {
-      core.info('Tags fetch complete.')
-      return refs.reverse()
+    .graphql(
+      `{
+        repository(owner: ${owner}, name: ${repo}) {
+          refs(
+            first: 100
+            refPrefix: "refs/tags/"
+            orderBy: { field: TAG_COMMIT_DATE, direction: DESC }
+          ) {
+            nodes {
+              ref: name
+              object: target {
+                sha: oid
+              }
+            }
+          }
+        }
+      }`
+    ).then((result) => {
+      return result.data.repository.refs.nodes
     })
     .catch((e) => {
       core.setFailed(`Failed to fetch tags: ${e}`)
