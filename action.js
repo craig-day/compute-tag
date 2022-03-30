@@ -79,7 +79,7 @@ async function existingTags() {
         }
       }`
     ).then((result) => {
-      return result.data.repository.refs.nodes
+      return result.repository.refs.nodes
     })
     .catch((e) => {
       core.setFailed(`Failed to fetch tags: ${e}`)
