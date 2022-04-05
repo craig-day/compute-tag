@@ -40,6 +40,8 @@ const Semantic = {
   Minor: 'minor',
   Patch: 'patch',
   Premajor: 'premajor',
+  Preminor: 'preminor',
+  Prepatch: 'prepatch',
   Prerelease: 'prerelease',
 }
 
@@ -187,6 +189,8 @@ function computeNextSemantic(semTag) {
       case Semantic.Minor:
       case Semantic.Patch:
       case Semantic.Premajor:
+      case Semantic.Preminor:
+      case Semantic.Prepatch:
       case Semantic.Prerelease:
         return `${semTag.options.tagPrefix}${semver.inc(semTag, type, preName)}`
       default:
