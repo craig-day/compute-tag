@@ -17,11 +17,11 @@
   },
   "homepage": "https://github.com/craig-day/compute-tag#readme",
   "dependencies": {
-    "@actions/core": "^1.2.6",
-    "@actions/github": "^2.1.1",
-    "@octokit/core": "^3.6.0",
-    "@octokit/plugin-retry": "^3.0.7",
-    "@octokit/plugin-throttling": "^3.4.1",
-    "semver": "^7.1.3"
+    "@actions/core": "^1.10.0",
+    "@actions/github": "^5.1.1",
+    "@octokit/core": "^4.1.0",
+    "@octokit/plugin-retry": "^4.0.3",
+    "@octokit/plugin-throttling": "^4.3.2",
+    "semver": "^7.3.8"
   }
 }

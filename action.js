@@ -1,12 +1,12 @@
 const core = require('@actions/core')
-const github = require('@actions/github')
+const github = require('@actions/github/lib/utils')
 const semver = require('semver')
 const process = require('process')
 const { throttling } = require('@octokit/plugin-throttling')
 const { retry } = require('@octokit/plugin-retry')
 const { Octokit } = require('@octokit/core');
 
-const GitClient = github.GitHub.plugin([throttling, retry])
+const GitClient = github.GitHub.plugin(throttling, retry)
 
 const gitClient = new GitClient({
   auth: core.getInput('github_token', { required: true }),
