@@ -89,7 +89,7 @@ async function existingTags() {
 }
 
 async function latestTagForBranch(allTags, branch) {
-  const options = gitClient.repos.listCommits.endpoint.merge({
+  const options = gitClient.rest.repos.listCommits.endpoint.merge({
     ...requestOpts,
     sha: branch,
   })
