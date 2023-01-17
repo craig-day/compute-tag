@@ -16,7 +16,7 @@ This can be helpful to automatically compute tags and pipe them to the
 | `tag`               | The tag to compute the next version of. If not specified, the most recent tag in the repo.                                                                                                                                                                                                                            | N        | Latest       |
 | `branch`            | The branch to find compute the tag for. This requires iteration of all tags for the repo and the commits for the branch to find a tag for a commit on the branch. For large repositories this can be very slow. It is highly recommended that `github_token` be supplied to prevent rate limit errors when searching. | N        | N/A          |
 | `version_scheme`    | One of (`continuous`, `semantic`).                                                                                                                                                                                                                                                                                    | N        | `semantic`   |
-| `version_type`      | One of (`major`, `minor`, `patch`, `premajor`, `preminor`, `prepatch`, `prerelease`).                                                                                                                                                                                                                                                         | N        | `prerelease` |
+| `version_type`      | One of (`major`, `minor`, `patch`, `premajor`, `preminor`, `prepatch`, `prerelease`).                                                                                                                                                                                                                                 | N        | `prerelease` |
 | `prerelease_suffix` | The suffix added to a prerelease tag, if none already exists.                                                                                                                                                                                                                                                         | N        | `beta`       |
 
 ## Output
@@ -29,7 +29,7 @@ This can be helpful to automatically compute tags and pipe them to the
 ```yaml
 steps:
   - id: compute_tag
-    uses: craig-day/compute-tag@v10
+    uses: craig-day/compute-tag@v15
     with:
       github_token: ${{ github.token }}
 ```
@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: compute_tag
-        uses: craig-day/compute-tag@v10
+        uses: craig-day/compute-tag@v15
         with:
           github_token: ${{ github.token }}
 ```
@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: compute_tag
-        uses: craig-day/compute-tag@v10
+        uses: craig-day/compute-tag@v15
         with:
           github_token: ${{ github.token }}
           version_type: patch
@@ -113,7 +113,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: compute_tag
-        uses: craig-day/compute-tag@v10
+        uses: craig-day/compute-tag@v15
         with:
           github_token: ${{ github.token }}
           version_scheme: continuous
@@ -144,7 +144,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: compute_tag
-        uses: craig-day/compute-tag@v10
+        uses: craig-day/compute-tag@v15
         with:
           github_token: ${{ github.token }}
           version_scheme: semantic
@@ -161,6 +161,9 @@ Computed the next tag as: v5.0.0-pre.5
 
 **Create a GitHub Release for each push to `master`**
 
+> NOTE: Since `actions/create-release` is deprecated, this example uses [`softprops/action-gh-release`](https://github.com/softprops/action-gh-release)
+> which maintains a similar API and feature set.
+
 ```yaml
 name: Release
 
@@ -174,18 +177,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: compute_tag
-        uses: craig-day/compute-tag@v10
+        uses: craig-day/compute-tag@v15
         with:
           github_token: ${{ github.token }}
           version_scheme: semantic
 
       - name: create release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
         with:
+          name: ${{ steps.compute_tag.outputs.next_tag }}
           tag_name: ${{ steps.compute_tag.outputs.next_tag }}
-          release_name: ${{ steps.compute_tag.outputs.next_tag }}
-          body: >
-            Automatic release of ${{ steps.compute_tag.outputs.next_tag }}
+          generate_release_notes: true
+          prerelease: true
         env:
           GITHUB_TOKEN: ${{ github.token }}
 ```
