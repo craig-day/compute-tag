@@ -131,12 +131,12 @@ function semanticVersion(tag) {
     const [version, pre] = tag.split('-', 2)
     const sem = semver.parse(semver.coerce(version))
 
-    // reset the raw string values tracked in the object to ensure future
-    // calculations are performed correctly
-    sem.raw = `${sem.raw}-${pre}`
-    sem.version = `${sem.version}-${pre}`
-    
     if (!isNullString(pre)) {
+      // reset the raw string values tracked in the object to ensure future
+      // calculations are performed correctly
+      sem.raw = `${sem.raw}-${pre}`
+      sem.version = `${sem.version}-${pre}`
+
       sem.prerelease = semver.prerelease(`0.0.0-${pre}`)
     }
 
