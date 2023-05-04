@@ -91,6 +91,10 @@ async function existingTags() {
 async function latestTagForBranch(allTags, branch) {
   const options = gitClient.rest.repos.listCommits.endpoint.merge({
     ...requestOpts,
+    // Set pagination per_page param to max allowed (100).
+    // Default is 30 per page, which can hit rate limits on repositories with
+    // a lot of commits.
+    per_page: 100,
     sha: branch,
   })
 
