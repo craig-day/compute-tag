@@ -22,6 +22,6 @@
     "@octokit/core": "^4.1.0",
     "@octokit/plugin-retry": "^4.0.3",
     "@octokit/plugin-throttling": "^4.3.2",
-    "semver": "^7.3.8"
+    "semver": "^7.5.2"
   }
 }
