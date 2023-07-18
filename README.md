@@ -18,6 +18,7 @@ This can be helpful to automatically compute tags and pipe them to the
 | `version_scheme`    | One of (`continuous`, `semantic`).                                                                                                                                                                                                                                                                                    | N        | `semantic`   |
 | `version_type`      | One of (`major`, `minor`, `patch`, `premajor`, `preminor`, `prepatch`, `prerelease`).                                                                                                                                                                                                                                 | N        | `prerelease` |
 | `prerelease_suffix` | The suffix added to a prerelease tag, if none already exists.                                                                                                                                                                                                                                                         | N        | `beta`       |
+| `tag_fetch_depth`   | The number of tags to fetch when searching for the previous tag.                                                                                                                                                                                                                                                      | N        | 10           |
 
 ## Output
 
