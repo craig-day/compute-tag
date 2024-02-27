@@ -56,7 +56,7 @@ function initialTag(tag) {
   const suffix = core.getInput('prerelease_suffix')
   const newTag = isPrerelease ? `${tag}-${suffix}` : tag
 
-  return `${newTag}.0`
+  return `${newTag}`
 }
 
 async function existingTags() {
