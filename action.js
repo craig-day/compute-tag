@@ -54,9 +54,8 @@ function isNullString(string) {
 function initialTag(tag) {
   const isPrerelease = core.getInput('version_type') == Semantic.Prerelease
   const suffix = core.getInput('prerelease_suffix')
-  const newTag = isPrerelease ? `${tag}-${suffix}` : tag
-
-  return `${newTag}`
+  
+  return isPrerelease ? `${tag}-${suffix}` : tag
 }
 
 async function existingTags() {
