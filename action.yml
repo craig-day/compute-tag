@@ -6,7 +6,7 @@ branding:
   icon: tag
 
 runs:
-  using: node16
+  using: node20
   main: action.js
 
 inputs:
