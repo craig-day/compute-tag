@@ -54,7 +54,7 @@ function isNullString(string) {
 function initialTag(tag) {
   const isPrerelease = core.getInput('version_type') == Semantic.Prerelease
   const suffix = core.getInput('prerelease_suffix')
-  
+
   return isPrerelease ? `${tag}-${suffix}` : tag
 }
 
@@ -88,45 +88,65 @@ async function existingTags() {
 }
 
 async function latestTagForBranch(allTags, branch) {
-  const options = gitClient.rest.repos.listCommits.endpoint.merge({
-    ...requestOpts,
-    // Set pagination per_page param to max allowed (100).
-    // Default is 30 per page, which can hit rate limits on repositories with
-    // a lot of commits.
-    per_page: 100,
-    sha: branch,
-  })
-
   core.info(
     `Fetching commits for ref ${branch}. This may take a while on large repositories.`
   )
 
-  return await gitClient
-    .paginate(options, (response, done) => {
-      for (const commit of response.data) {
-        if (allTags.find((tag) => tag.object.sha === commit.sha)) {
-          core.info('Finished fetching commits, found a tag match.')
-          done()
-          break
+  const query =
+    `query commits($cursor: String) {
+      repository(owner: "${owner}", name: "${repo}") {
+        branch: ref(qualifiedName: "${branch}") {
+          head: target {
+            ... on Commit {
+              history(first: 100, after: $cursor) {
+                commits: nodes {
+                  sha: oid
+                }
+                pageInfo {
+                  endCursor
+                  hasNextPage
+                }
+              }
+            }
+          }
         }
       }
+    }`
+  let cursor = null;
 
-      return response.data
-    })
-    .then((commits) => {
-      core.info(`Fetched ${commits.length} commits`)
-      let latestTag
+  let latestTag
+  let moreToFetch = true
+  while (isNullString(latestTag) && moreToFetch) {
+    let opts = {
+      cursor: cursor,
+    }
 
-      for (const commit of commits) {
-        latestTag = allTags.find((tag) => tag.object.sha === commit.sha)
-        if (latestTag) break
-      }
+    latestTag = await octokit.graphql(query, opts)
+      .then((data) => {
+        let commits = data.repository.branch.head.history.commits
+        let pageInfo = data.repository.branch.head.history.pageInfo
+        cursor = pageInfo.endCursor
+        moreToFetch = pageInfo.hasNextPage
 
-      return latestTag
-    })
-    .catch((e) => {
-      core.setFailed(`Failed to fetch commits for branch '${branch}' : ${e}`)
-    })
+        core.info(`Fetched ${commits.length} commits`)
+
+        for (const commit of commits) {
+          latestTag = allTags.find((tag) => tag.object.sha === commit.sha)
+          if (latestTag) {
+            core.info('Finished fetching commits, found a tag match.')
+            break
+          }
+        }
+
+        return latestTag
+      })
+      .catch((e) => {
+        core.setFailed(`Failed to fetch commits for branch '${branch}' : ${e}`)
+        moreToFetch = false
+      })
+  }
+
+  return latestTag
 }
 
 function semanticVersion(tag) {
