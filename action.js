@@ -34,6 +34,8 @@ const inputs = {
   givenTag: core.getInput('tag'),
 }
 
+let fetchedHistory = []
+
 const Scheme = {
   Continuous: 'continuous',
   Semantic: 'semantic',
@@ -129,10 +131,9 @@ async function latestTagForBranch(allTags, branch) {
       .then((data) => {
         let commits = data.repository.branch.head.history.commits
         let pageInfo = data.repository.branch.head.history.pageInfo
-        cursor = pageInfo.endCursor
-        moreToFetch = pageInfo.hasNextPage
 
         core.info(`Fetched ${commits.length} commits`)
+        fetchedHistory.push(...commits)
 
         for (const commit of commits) {
           latestTag = allTags.find((tag) => tag.object.sha === commit.sha)
@@ -141,6 +142,9 @@ async function latestTagForBranch(allTags, branch) {
             break
           }
         }
+
+        cursor = pageInfo.endCursor
+        moreToFetch = pageInfo.hasNextPage
 
         return latestTag
       })
