@@ -28,7 +28,11 @@ const octokit = new Octokit({
 })
 
 const [owner, repo] = process.env['GITHUB_REPOSITORY'].split('/', 2)
-const requestOpts = { owner, repo }
+const inputs = {
+  scheme: core.getInput('version_scheme'),
+  branch: core.getInput('branch'),
+  givenTag: core.getInput('tag'),
+}
 
 const Scheme = {
   Continuous: 'continuous',
@@ -264,21 +268,17 @@ async function computeLastTag(givenTag, branch = null) {
 }
 
 async function computeNextTag() {
-  const scheme = core.getInput('version_scheme')
-  const branch = core.getInput('branch')
-  const givenTag = core.getInput('tag')
-
-  const lastTag = await computeLastTag(givenTag, branch)
+  const lastTag = await computeLastTag(inputs.givenTag, inputs.branch)
 
   // Handle zero-state where no tags exist for the repo
   if (!lastTag) {
-    switch (scheme) {
+    switch (inputs.scheme) {
       case Scheme.Continuous:
         return initialTag('v1')
       case Scheme.Semantic:
         return initialTag('v1.0.0')
       default:
-        core.setFailed(`Unsupported version scheme: ${scheme}`)
+        core.setFailed(`Unsupported version scheme: ${inputs.scheme}`)
         return
     }
   }
@@ -295,14 +295,14 @@ async function computeNextTag() {
     semTag.options.tagPrefix = lastTag.startsWith('v') ? 'v' : ''
   }
 
-  switch (scheme) {
+  switch (inputs.scheme) {
     case 'continuous':
       return computeNextContinuous(semTag)
     case 'semantic':
       return computeNextSemantic(semTag)
     default:
       core.setFailed(
-        `Invalid version_scheme: '${scheme}'. Must be one of (${Object.values(
+        `Invalid version_scheme: '${inputs.scheme}'. Must be one of (${Object.values(
           Scheme
         ).join(', ')})`
       )
