@@ -35,8 +35,10 @@ const inputs = {
 }
 
 let fetchedHistory = []
+let fetchedTags = []
 
 const Scheme = {
+  Absolute: 'absolute',
   Continuous: 'continuous',
   Semantic: 'semantic',
 }
@@ -86,11 +88,27 @@ async function existingTags() {
         }
       }`
     ).then((result) => {
-      return result.repository.refs.nodes
+      fetchedTags = result.repository.refs.nodes
+      return fetchedTags
     })
     .catch((e) => {
       core.setFailed(`Failed to fetch tags: ${e}`)
     })
+}
+
+async function fetchWorkflowCommitDate() {
+  return await octokit.graphql(
+    `{
+      repository(owner: "${owner}", name: "${repo}") {
+        commit: object(oid: "${process.env['GITHUB_SHA']}") {
+          ... on Commit {
+            sha: oid
+            committedDate
+          }
+        }
+      }
+    }`
+  ).then((data) => data.repository.commit.committedDate)
 }
 
 async function latestTagForBranch(allTags, branch) {
@@ -99,14 +117,20 @@ async function latestTagForBranch(allTags, branch) {
   )
 
   const query =
-    `query commits($cursor: String) {
+    `query commits(
+      $cursor: String,
+      $depth: Int!,
+      $includePRs: Boolean!,
+      $until: GitTimestamp
+    ) {
       repository(owner: "${owner}", name: "${repo}") {
         branch: ref(qualifiedName: "${branch}") {
           head: target {
             ... on Commit {
-              history(first: 100, after: $cursor) {
+              history(first: $depth, after: $cursor, until: $until) {
                 commits: nodes {
                   sha: oid
+                  ...associatedPRs @include(if: $includePRs)
                 }
                 pageInfo {
                   endCursor
@@ -117,14 +141,30 @@ async function latestTagForBranch(allTags, branch) {
           }
         }
       }
+    }
+
+    fragment associatedPRs on Commit {
+      associatedPullRequests(first: 1) {
+        prs: nodes {
+          baseRefName
+          mergeCommit {
+            sha: oid
+          }
+        }
+      }
     }`
   let cursor = null;
+  const isAbsolute = (inputs.scheme == Scheme.Absolute)
+  const until = isAbsolute ? await fetchWorkflowCommitDate() : null
 
   let latestTag
   let moreToFetch = true
   while (isNullString(latestTag) && moreToFetch) {
     let opts = {
       cursor: cursor,
+      depth: isAbsolute ? 20 : 100,
+      includePRs: isAbsolute,
+      until: until,
     }
 
     latestTag = await octokit.graphql(query, opts)
@@ -203,6 +243,49 @@ function determinePrereleaseName(semTag) {
   }
 }
 
+// increments version according to the number of merge commits between
+// this one and the most recent tag in history.
+// assumes repo merge strategy that generates merge commits,
+// and that only merge commits will receive tags.
+// also assumes continuous versioning.
+function computeNextAbsolute(semTag, lastTag) {
+  const tag = fetchedTags.find((tag) => {
+    return tag.ref === lastTag
+  })
+  const tagSha = tag.object.sha
+  const tagIndex = fetchedHistory.findIndex((commit) => commit.sha === tagSha)
+  // we only want merge commits between now and the most recent tag
+  const paredHistory = fetchedHistory.slice(0, tagIndex)
+  const relevantHistory = paredHistory.filter((commit) => {
+    const pr = commit.associatedPullRequests.prs[0]
+
+    // filters non-merge commits
+    if (!pr || !pr.mergeCommit || pr.mergeCommit.sha != commit.sha) {
+      return false
+    }
+
+    // ensures merge was into this branch
+    // and not into a branch that was then merged into this one
+    if (pr.baseRefName != inputs.branch.replace('refs/heads/', '')) {
+      return false
+    }
+
+    return true
+  })
+
+  let nextTag = semTag
+  for (const commit of relevantHistory) {
+    nextTag = semver.inc(nextTag, determineContinuousBumpType(semTag), determinePrereleaseName(semTag))
+  }
+
+  nextTag = semver.parse(nextTag)
+  const tagSuffix =
+    nextTag.prerelease.length > 0
+      ? `-${nextTag.prerelease.join('.')}`
+      : ''
+  return [semTag.options.tagPrefix, nextTag.major, tagSuffix].join('')
+}
+
 function computeNextContinuous(semTag) {
   const bumpType = determineContinuousBumpType(semTag)
   const preName = determinePrereleaseName(semTag)
@@ -277,6 +360,7 @@ async function computeNextTag() {
   // Handle zero-state where no tags exist for the repo
   if (!lastTag) {
     switch (inputs.scheme) {
+      case Scheme.Absolute:
       case Scheme.Continuous:
         return initialTag('v1')
       case Scheme.Semantic:
@@ -300,6 +384,8 @@ async function computeNextTag() {
   }
 
   switch (inputs.scheme) {
+    case 'absolute':
+      return computeNextAbsolute(semTag, lastTag)
     case 'continuous':
       return computeNextContinuous(semTag)
     case 'semantic':
