@@ -28,9 +28,17 @@ const octokit = new Octokit({
 })
 
 const [owner, repo] = process.env['GITHUB_REPOSITORY'].split('/', 2)
-const requestOpts = { owner, repo }
+const inputs = {
+  scheme: core.getInput('version_scheme'),
+  branch: core.getInput('branch'),
+  givenTag: core.getInput('tag'),
+}
+
+let fetchedHistory = []
+let fetchedTags = []
 
 const Scheme = {
+  Absolute: 'absolute',
   Continuous: 'continuous',
   Semantic: 'semantic',
 }
@@ -54,7 +62,7 @@ function isNullString(string) {
 function initialTag(tag) {
   const isPrerelease = core.getInput('version_type') == Semantic.Prerelease
   const suffix = core.getInput('prerelease_suffix')
-  
+
   return isPrerelease ? `${tag}-${suffix}` : tag
 }
 
@@ -80,53 +88,113 @@ async function existingTags() {
         }
       }`
     ).then((result) => {
-      return result.repository.refs.nodes
+      fetchedTags = result.repository.refs.nodes
+      return fetchedTags
     })
     .catch((e) => {
       core.setFailed(`Failed to fetch tags: ${e}`)
     })
 }
 
-async function latestTagForBranch(allTags, branch) {
-  const options = gitClient.rest.repos.listCommits.endpoint.merge({
-    ...requestOpts,
-    // Set pagination per_page param to max allowed (100).
-    // Default is 30 per page, which can hit rate limits on repositories with
-    // a lot of commits.
-    per_page: 100,
-    sha: branch,
-  })
+async function fetchWorkflowCommitDate() {
+  return await octokit.graphql(
+    `{
+      repository(owner: "${owner}", name: "${repo}") {
+        commit: object(oid: "${process.env['GITHUB_SHA']}") {
+          ... on Commit {
+            sha: oid
+            committedDate
+          }
+        }
+      }
+    }`
+  ).then((data) => data.repository.commit.committedDate)
+}
 
+async function latestTagForBranch(allTags, branch) {
   core.info(
     `Fetching commits for ref ${branch}. This may take a while on large repositories.`
   )
 
-  return await gitClient
-    .paginate(options, (response, done) => {
-      for (const commit of response.data) {
-        if (allTags.find((tag) => tag.object.sha === commit.sha)) {
-          core.info('Finished fetching commits, found a tag match.')
-          done()
-          break
+  const query =
+    `query commits(
+      $cursor: String,
+      $depth: Int!,
+      $includePRs: Boolean!,
+      $until: GitTimestamp
+    ) {
+      repository(owner: "${owner}", name: "${repo}") {
+        branch: ref(qualifiedName: "${branch}") {
+          head: target {
+            ... on Commit {
+              history(first: $depth, after: $cursor, until: $until) {
+                commits: nodes {
+                  sha: oid
+                  ...associatedPRs @include(if: $includePRs)
+                }
+                pageInfo {
+                  endCursor
+                  hasNextPage
+                }
+              }
+            }
+          }
         }
       }
+    }
 
-      return response.data
-    })
-    .then((commits) => {
-      core.info(`Fetched ${commits.length} commits`)
-      let latestTag
-
-      for (const commit of commits) {
-        latestTag = allTags.find((tag) => tag.object.sha === commit.sha)
-        if (latestTag) break
+    fragment associatedPRs on Commit {
+      associatedPullRequests(first: 1) {
+        prs: nodes {
+          baseRefName
+          mergeCommit {
+            sha: oid
+          }
+        }
       }
+    }`
+  let cursor = null;
+  const isAbsolute = (inputs.scheme == Scheme.Absolute)
+  const until = isAbsolute ? await fetchWorkflowCommitDate() : null
 
-      return latestTag
-    })
-    .catch((e) => {
-      core.setFailed(`Failed to fetch commits for branch '${branch}' : ${e}`)
-    })
+  let latestTag
+  let moreToFetch = true
+  while (isNullString(latestTag) && moreToFetch) {
+    let opts = {
+      cursor: cursor,
+      depth: isAbsolute ? 20 : 100,
+      includePRs: isAbsolute,
+      until: until,
+    }
+
+    latestTag = await octokit.graphql(query, opts)
+      .then((data) => {
+        let commits = data.repository.branch.head.history.commits
+        let pageInfo = data.repository.branch.head.history.pageInfo
+
+        core.info(`Fetched ${commits.length} commits`)
+        fetchedHistory.push(...commits)
+
+        for (const commit of commits) {
+          latestTag = allTags.find((tag) => tag.object.sha === commit.sha)
+          if (latestTag) {
+            core.info('Finished fetching commits, found a tag match.')
+            break
+          }
+        }
+
+        cursor = pageInfo.endCursor
+        moreToFetch = pageInfo.hasNextPage
+
+        return latestTag
+      })
+      .catch((e) => {
+        core.setFailed(`Failed to fetch commits for branch '${branch}' : ${e}`)
+        moreToFetch = false
+      })
+  }
+
+  return latestTag
 }
 
 function semanticVersion(tag) {
@@ -173,6 +241,49 @@ function determinePrereleaseName(semTag) {
   } else {
     return core.getInput('prerelease_suffix') || 'beta'
   }
+}
+
+// increments version according to the number of merge commits between
+// this one and the most recent tag in history.
+// assumes repo merge strategy that generates merge commits,
+// and that only merge commits will receive tags.
+// also assumes continuous versioning.
+function computeNextAbsolute(semTag, lastTag) {
+  const tag = fetchedTags.find((tag) => {
+    return tag.ref === lastTag
+  })
+  const tagSha = tag.object.sha
+  const tagIndex = fetchedHistory.findIndex((commit) => commit.sha === tagSha)
+  // we only want merge commits between now and the most recent tag
+  const paredHistory = fetchedHistory.slice(0, tagIndex)
+  const relevantHistory = paredHistory.filter((commit) => {
+    const pr = commit.associatedPullRequests.prs[0]
+
+    // filters non-merge commits
+    if (!pr || !pr.mergeCommit || pr.mergeCommit.sha != commit.sha) {
+      return false
+    }
+
+    // ensures merge was into this branch
+    // and not into a branch that was then merged into this one
+    if (pr.baseRefName != inputs.branch.replace('refs/heads/', '')) {
+      return false
+    }
+
+    return true
+  })
+
+  let nextTag = semTag
+  for (const commit of relevantHistory) {
+    nextTag = semver.inc(nextTag, determineContinuousBumpType(semTag), determinePrereleaseName(semTag))
+  }
+
+  nextTag = semver.parse(nextTag)
+  const tagSuffix =
+    nextTag.prerelease.length > 0
+      ? `-${nextTag.prerelease.join('.')}`
+      : ''
+  return [semTag.options.tagPrefix, nextTag.major, tagSuffix].join('')
 }
 
 function computeNextContinuous(semTag) {
@@ -244,21 +355,18 @@ async function computeLastTag(givenTag, branch = null) {
 }
 
 async function computeNextTag() {
-  const scheme = core.getInput('version_scheme')
-  const branch = core.getInput('branch')
-  const givenTag = core.getInput('tag')
-
-  const lastTag = await computeLastTag(givenTag, branch)
+  const lastTag = await computeLastTag(inputs.givenTag, inputs.branch)
 
   // Handle zero-state where no tags exist for the repo
   if (!lastTag) {
-    switch (scheme) {
+    switch (inputs.scheme) {
+      case Scheme.Absolute:
       case Scheme.Continuous:
         return initialTag('v1')
       case Scheme.Semantic:
         return initialTag('v1.0.0')
       default:
-        core.setFailed(`Unsupported version scheme: ${scheme}`)
+        core.setFailed(`Unsupported version scheme: ${inputs.scheme}`)
         return
     }
   }
@@ -275,14 +383,16 @@ async function computeNextTag() {
     semTag.options.tagPrefix = lastTag.startsWith('v') ? 'v' : ''
   }
 
-  switch (scheme) {
+  switch (inputs.scheme) {
+    case 'absolute':
+      return computeNextAbsolute(semTag, lastTag)
     case 'continuous':
       return computeNextContinuous(semTag)
     case 'semantic':
       return computeNextSemantic(semTag)
     default:
       core.setFailed(
-        `Invalid version_scheme: '${scheme}'. Must be one of (${Object.values(
+        `Invalid version_scheme: '${inputs.scheme}'. Must be one of (${Object.values(
           Scheme
         ).join(', ')})`
       )
