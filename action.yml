@@ -30,7 +30,7 @@ inputs:
     required: false
     default: 10
   version_scheme:
-    description: The versioning scheme to use. Currently only supports `continuous` or `semantic`.
+    description: The versioning scheme to use. Currently supports `continuous`, `semantic`, or `absolute`.
     required: false
     default: semantic
   version_type:
