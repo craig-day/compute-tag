@@ -87,7 +87,7 @@ async function existingTags() {
     })
 }
 
-async function latestTagForBranch(allTags, branch) {
+async function latestTagForBranch(allTags, branch, tagPrefix = '') {
   const options = gitClient.rest.repos.listCommits.endpoint.merge({
     ...requestOpts,
     // Set pagination per_page param to max allowed (100).
@@ -131,8 +131,8 @@ async function latestTagForBranch(allTags, branch) {
 
       // Return the tag with the highest version number
       return matchingTags.reduce((highest, tag) => {
-        const highestSem = semanticVersion(highest.ref)
-        const tagSem = semanticVersion(tag.ref)
+        const highestSem = semanticVersion(highest.ref, tagPrefix)
+        const tagSem = semanticVersion(tag.ref, tagPrefix)
         if (!highestSem) return tag
         if (!tagSem) return highest
         return semver.compare(tagSem, highestSem) > 0 ? tag : highest
@@ -143,9 +143,13 @@ async function latestTagForBranch(allTags, branch) {
     })
 }
 
-function semanticVersion(tag) {
+function semanticVersion(tag, prefix = '') {
   try {
-    const [version, pre] = tag.split('-', 2)
+    let cleanTag = tag
+    if (prefix && cleanTag.startsWith(prefix)) {
+      cleanTag = cleanTag.slice(prefix.length)
+    }
+    const [version, pre] = cleanTag.split('-', 2)
     const sem = semver.parse(semver.coerce(version))
 
     if (!isNullString(pre)) {
@@ -227,9 +231,9 @@ function computeNextSemantic(semTag) {
   }
 }
 
-async function findMatchingLastTag(tags, branch = null) {
+async function findMatchingLastTag(tags, branch = null, tagPrefix = '') {
   if (branch) {
-    const latestTag = await latestTagForBranch(tags, branch)
+    const latestTag = await latestTagForBranch(tags, branch, tagPrefix)
 
     if (latestTag) {
       return latestTag.ref.replace('refs/tags/', '')
@@ -241,14 +245,18 @@ async function findMatchingLastTag(tags, branch = null) {
   }
 }
 
-async function computeLastTag(givenTag, branch = null) {
+async function computeLastTag(givenTag, branch = null, tagPrefix = '') {
   if (isNullString(givenTag)) {
-    const recentTags = await existingTags()
+    let recentTags = await existingTags()
+
+    if (tagPrefix) {
+      recentTags = recentTags.filter(t => t.ref.startsWith(tagPrefix))
+    }
 
     if (recentTags.length < 1) {
       return null
     } else {
-      return findMatchingLastTag(recentTags, branch).catch((error) => {
+      return findMatchingLastTag(recentTags, branch, tagPrefix).catch((error) => {
         core.setFailed(`Failed to find matching last tag with error ${error}`)
       })
     }
@@ -261,16 +269,17 @@ async function computeNextTag() {
   const scheme = core.getInput('version_scheme')
   const branch = core.getInput('branch')
   const givenTag = core.getInput('tag')
+  const tagPrefix = core.getInput('tag_prefix')
 
-  const lastTag = await computeLastTag(givenTag, branch)
+  const lastTag = await computeLastTag(givenTag, branch, tagPrefix)
 
   // Handle zero-state where no tags exist for the repo
   if (!lastTag) {
     switch (scheme) {
       case Scheme.Continuous:
-        return initialTag('v1')
+        return initialTag(`${tagPrefix || 'v'}1`)
       case Scheme.Semantic:
-        return initialTag('v1.0.0')
+        return initialTag(`${tagPrefix || 'v'}1.0.0`)
       default:
         core.setFailed(`Unsupported version scheme: ${scheme}`)
         return
@@ -280,13 +289,13 @@ async function computeNextTag() {
   core.info(`Computing the next tag based on: ${lastTag}`)
   core.setOutput('previous_tag', lastTag)
 
-  const semTag = semanticVersion(lastTag)
+  const semTag = semanticVersion(lastTag, tagPrefix)
 
   if (semTag == null) {
     core.setFailed(`Failed to parse tag: ${lastTag}`)
     return
   } else {
-    semTag.options.tagPrefix = lastTag.startsWith('v') ? 'v' : ''
+    semTag.options.tagPrefix = tagPrefix || (lastTag.startsWith('v') ? 'v' : '')
   }
 
   switch (scheme) {

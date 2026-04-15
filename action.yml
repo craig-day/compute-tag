@@ -41,6 +41,12 @@ inputs:
     description: What to annotate a prerelease version tag with.
     required: false
     default: 'beta'
+  tag_prefix:
+    description: >
+      Prefix for tags. When set, only tags starting with this prefix are considered
+      for version computation, and the prefix is applied to the computed next tag.
+      When unset, existing behavior is preserved (auto-detects 'v' prefix).
+    required: false
 
 outputs:
   next_tag:
