@@ -5,6 +5,7 @@ const process = require('process')
 const { throttling } = require('@octokit/plugin-throttling')
 const { retry } = require('@octokit/plugin-retry')
 const { Octokit } = require('@octokit/core');
+const { isNullString, semanticVersion } = require('./lib')
 
 const GitClient = github.GitHub.plugin(throttling, retry)
 
@@ -43,12 +44,6 @@ const Semantic = {
   Preminor: 'preminor',
   Prepatch: 'prepatch',
   Prerelease: 'prerelease',
-}
-
-function isNullString(string) {
-  return (
-    !string || string.length == 0 || string == 'null' || string == 'undefined'
-  )
 }
 
 function initialTag(tag) {
@@ -141,31 +136,6 @@ async function latestTagForBranch(allTags, branch, tagPrefix = '') {
     .catch((e) => {
       core.setFailed(`Failed to fetch commits for branch '${branch}' : ${e}`)
     })
-}
-
-function semanticVersion(tag, prefix = '') {
-  try {
-    let cleanTag = tag
-    if (prefix && cleanTag.startsWith(prefix)) {
-      cleanTag = cleanTag.slice(prefix.length)
-    }
-    const [version, pre] = cleanTag.split('-', 2)
-    const sem = semver.parse(semver.coerce(version))
-
-    if (!isNullString(pre)) {
-      // reset the raw string values tracked in the object to ensure future
-      // calculations are performed correctly
-      sem.raw = `${sem.raw}-${pre}`
-      sem.version = `${sem.version}-${pre}`
-
-      sem.prerelease = semver.prerelease(`0.0.0-${pre}`)
-    }
-
-    return sem
-  } catch (_) {
-    // semver will return null if it fails to parse, maintain this behavior in our API
-    return null
-  }
 }
 
 function determineContinuousBumpType(semTag) {
