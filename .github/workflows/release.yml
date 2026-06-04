@@ -24,7 +24,7 @@ jobs:
           version_type: prerelease
 
       - name: create release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           name: ${{ steps.compute_tag.outputs.next_tag }}
           tag_name: ${{ steps.compute_tag.outputs.next_tag }}
