@@ -4,7 +4,6 @@ const semver = require('semver')
 const process = require('process')
 const { throttling } = require('@octokit/plugin-throttling')
 const { retry } = require('@octokit/plugin-retry')
-const { Octokit } = require('@octokit/core');
 const { isNullString, semanticVersion } = require('./lib')
 
 const GitClient = github.GitHub.plugin(throttling, retry)
@@ -22,10 +21,6 @@ const gitClient = new GitClient({
       )
     },
   },
-})
-
-const octokit = new Octokit({
-  auth: core.getInput('github_token', { required: true })
 })
 
 const [owner, repo] = process.env['GITHUB_REPOSITORY'].split('/', 2)
@@ -56,7 +51,7 @@ function initialTag(tag) {
 async function existingTags() {
   core.info('Fetching tags.')
 
-  return await octokit
+  return await gitClient
     .graphql(
       `{
         repository(owner: "${owner}", name: "${repo}") {
